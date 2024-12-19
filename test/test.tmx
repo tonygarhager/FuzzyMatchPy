@@ -1,0 +1,446 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tmx version="1.4">
+<header creationtool="Smartcat" creationtoolversion="7.0.0.0" segtype="sentence" o-tmf="ATM" adminlang="en-US" srclang="en" datatype="plaintext">
+</header>
+<body>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044753Z">
+<tuv xml:lang="en">
+<prop type="x-context-post">&lt;seg&gt;Why are we doing this?&lt;/seg&gt;</prop>
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />Our Belief<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />ความเชื่อของเรา<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044754Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Our Belief&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Our belief is that together, through the power of our brands, we can unite our actions to deliver impactful change and be a force for better, for our people, planet and business ecosystem.&lt;/seg&gt;</prop>
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />Why are we doing this?<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />ทำไมเราถึงทำสิ่งนี้?<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044754Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Why are we doing this?&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;This strategy aims to benefit our business, the people, and the planet.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Our belief is that together, through the power of our brands, we can unite our actions to deliver impactful change and be a force for better, for our people, planet and business ecosystem.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />เราเชื่อว่า ด้วยพลังของแบรนด์ของเรา เราสามารถรวมพลังการกระทำของเราเพื่อสร้างการเปลี่ยนแปลงที่มีผลกระทบ และเป็นพลังที่ดีขึ้น สำหรับผู้คน โลกใบนี้ และระบบนิเวศทางธุรกิจของเรา<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044755Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Our belief is that together, through the power of our brands, we can unite our actions to deliver impactful change and be a force for better, for our people, planet and business ecosystem.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Click to reveal our targets for 2025:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />This strategy aims to benefit our business, the people, and the planet.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />กลยุทธ์นี้มีเป้าหมายเพื่อให้เกิดประโยชน์ต่อธุรกิจ ผู้คน และโลกใบนี้ของเรา<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044802Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;This strategy aims to benefit our business, the people, and the planet.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Working towards 100% responsibly sourced green coffee, tea and palm oil&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Click to reveal our targets for 2025:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />คลิกเพื่อดูเป้าหมายของเราสำหรับปี 2025:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044803Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Click to reveal our targets for 2025:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Directly reaching 500,0000 smallholder farmers (since 2015)&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Working towards 100% responsibly sourced green coffee, tea and palm oil<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />มุ่งสู่การจัดหากาแฟเขียว ชา และน้ำมันปาล์มที่มาจากแหล่งที่มีความรับผิดชอบ 100%<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044806Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Working towards 100% responsibly sourced green coffee, tea and palm oil&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Zero waste-to-landfill at all 43 of our manufacturing facilities&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Directly reaching 500,0000 smallholder farmers (since 2015)<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />เข้าถึงเกษตรกรรายย่อย 500,000 รายโดยตรง (ตั้งแต่ปี 2015)<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044807Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Directly reaching 500,0000 smallholder farmers (since 2015)&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;40% women in leadership positions&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Zero waste-to-landfill at all 43 of our manufacturing facilities<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ขยะเป็นศูนย์สู่หลุมฝังกลบที่โรงงานผลิตทั้ง 43 แห่งของเรา<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044807Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Zero waste-to-landfill at all 43 of our manufacturing facilities&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;100% of our manufacturing sites to be food safety quality certified&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />40% women in leadership positions<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ผู้หญิง 40% ในตำแหน่งผู้นำ<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044807Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;40% women in leadership positions&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Click to reveal our targets for 2030:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />100% of our manufacturing sites to be food safety quality certified<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />โรงงานผลิตของเรา 100% ได้รับการรับรองคุณภาพความปลอดภัยด้านอาหาร<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044807Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;100% of our manufacturing sites to be food safety quality certified&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Reduction of absolute scope 1 &amp;amp; 2 GHG emissions (vs 2020) by 25%&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Click to reveal our targets for 2030:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />คลิกเพื่อดูเป้าหมายของเราสำหรับปี 2030:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044808Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Click to reveal our targets for 2030:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Reduction of absolute scope 3 GHG emissions (vs 2020) by 12.5%&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Reduction of absolute scope 1 &amp; 2 GHG emissions (vs 2020) by 25%<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ลดการปล่อยก๊าซเรือนกระจกขอบเขตที่ 1 และ 2 ลง 25% (เทียบกับปี 2020)<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044808Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Reduction of absolute scope 1 &amp;amp; 2 GHG emissions (vs 2020) by 25%&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Working towards 100% responsibly sourced green coffee, tea and palm oil&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Reduction of absolute scope 3 GHG emissions (vs 2020) by 12.5%<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ลดการปล่อยก๊าซเรือนกระจกขอบเขตที่ 3 ลง 12.5% (เทียบกับปี 2020)<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T032318Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Reduction of absolute scope 3 GHG emissions (vs 2020) by 12.5%&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Directly reaching 500,0000 smallholder farmers (since 2015)&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Working towards 100% responsibly sourced green coffee, tea and palm oil<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />การทำงานเพื่อมุ่งสู่การใช้กาแฟเขียว ชา และน้ำมันปาล์มจากแหล่งที่มีความรับผิดชอบ 100 %<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T032318Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Directly reaching 500,0000 smallholder farmers (since 2015)&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;40% women in leadership positions 100% of our manufacturing sites to be food safety quality certified&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Zero waste-to-landfill at all 43 of our manufacturing facilities<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />การฝังกลบของเสียเป็น 0 ที่โรงงานผลิตทั้ง 43 แห่งของเรา<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044809Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Zero waste-to-landfill at all 43 of our manufacturing facilities&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Responsible Sourcing Strategy for Coffee&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />40% women in leadership positions 100% of our manufacturing sites to be food safety quality certified<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ผู้หญิง 40% ในตำแหน่งผู้นำ โรงงานผลิตของเรา 100% ได้รับการรับรองคุณภาพความปลอดภัยด้านอาหาร<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044809Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;40% women in leadership positions 100% of our manufacturing sites to be food safety quality certified&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Since we know that verification cannot be relied fully to deliver on our Responsible Sourcing targets, we have developed a distinct, Innovative, and Inclusive Assess, Address and Progress Approach.&lt;/seg&gt;</prop>
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />Responsible Sourcing Strategy for Coffee<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />กลยุทธ์การจัดหาอย่างรับผิดชอบสำหรับกาแฟ<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044810Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Responsible Sourcing Strategy for Coffee&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Click the tiles to reveal the different elements within the approach:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Since we know that verification cannot be relied fully to deliver on our Responsible Sourcing targets, we have developed a distinct, Innovative, and Inclusive Assess, Address and Progress Approach.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />เนื่องจากเรารู้ว่าการตรวจสอบไม่สามารถพึ่งพาได้อย่างเต็มที่เพื่อให้บรรลุเป้าหมายการจัดหาอย่างรับผิดชอบของเรา เราจึงได้พัฒนาแนวทางการประเมิน แก้ไข และความก้าวหน้าที่โดดเด่น เป็นนวัตกรรม และครอบคลุม<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044810Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Since we know that verification cannot be relied fully to deliver on our Responsible Sourcing targets, we have developed a distinct, Innovative, and Inclusive Assess, Address and Progress Approach.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Assess:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Click the tiles to reveal the different elements within the approach:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />คลิกที่ไทล์เพื่อดูองค์ประกอบต่างๆ ภายในแนวทาง:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044810Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Click the tiles to reveal the different elements within the approach:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;3rd party verification for all coffee, free for the farmers since 2019, with Enveritas, first starts with an assessment of agricultural practices and socio-environmental issues in coffee farms.&lt;/seg&gt;</prop>
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />Assess:<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" />ประเมิน:<ph type="structure-only" x="2" /><ph type="structure-only" x="3" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044810Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Assess:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;For example, in 2022 Enveritas assessed 372,377 MT of green coffee deliveries from 72 suppliers.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />3<bpt i="1" type="structure-only" x="1" />rd<ept i="1" /> party verification for all coffee, free for the farmers since 2019, with Enveritas, first starts with an assessment of agricultural practices and socio-environmental issues in coffee farms.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />การตรวจสอบโดยบุคคลที่ <bpt i="1" type="structure-only" x="1" />3<ept i="1" /> สำหรับกาแฟทั้งหมด ฟรีสำหรับเกษตรกรตั้งแต่ปี 2019 กับ Enveritas เริ่มต้นด้วยการประเมินแนวปฏิบัติทางการเกษตรและประเด็นทางสังคมและสิ่งแวดล้อมในฟาร์มกาแฟ<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044811Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;3rd party verification for all coffee, free for the farmers since 2019, with Enveritas, first starts with an assessment of agricultural practices and socio-environmental issues in coffee farms.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Enveritas methodology draws upon the responses from in-person surveys and observations to evaluate compliance with our Responsible Sourcing Principles.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />For example, in 2022 Enveritas assessed 372,377 MT of green coffee deliveries from 72 suppliers.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ตัวอย่างเช่น ในปี 2022 Enveritas ได้ประเมินการส่งมอบกาแฟเขียว 372,377 ตันจากซัพพลายเออร์ 72 ราย<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044811Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;For example, in 2022 Enveritas assessed 372,377 MT of green coffee deliveries from 72 suppliers.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;In 2022, Enveritas conducted 30,457 surveys across 9 origin countries.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Enveritas methodology draws upon the responses from in-person surveys and observations to evaluate compliance with our Responsible Sourcing Principles.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />วิธีการของ Enveritas อาศัยการตอบสนองจากการสำรวจแบบตัวต่อตัวและการสังเกตการณ์เพื่อประเมินการปฏิบัติตามหลักการจัดหาอย่างรับผิดชอบของเรา<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044812Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Enveritas methodology draws upon the responses from in-person surveys and observations to evaluate compliance with our Responsible Sourcing Principles.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;More on the Enveritas approach later!&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />In 2022, Enveritas conducted 30,457 surveys across 9 origin countries.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ในปี 2022 Enveritas ได้ดำเนินการสำรวจ 30,457 ครั้งใน 9 ประเทศต้นทาง<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044813Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;In 2022, Enveritas conducted 30,457 surveys across 9 origin countries.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Address:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />More on the Enveritas approach later!<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ข้อมูลเพิ่มเติมเกี่ยวกับแนวทางของ Enveritas ในภายหลัง!<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044813Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;More on the Enveritas approach later!&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Enveritas' assessment is used to indicate the number of farmers JDE Peet's need to support through Common Grounds farmer projects.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Address:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />แก้ไข:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Address:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;In 2022, in order to claim our volumes as Responsibly Sourced under Enveritas' verification, we needed to support 87,244.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Enveritas' assessment is used to indicate the number of farmers JDE Peet's need to support through Common Grounds farmer projects.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />การประเมินของ Enveritas ใช้เพื่อระบุจำนวนเกษตรกรที่ JDE Peet's ต้องสนับสนุนผ่านโครงการเกษตรกร Common Grounds<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Enveritas' assessment is used to indicate the number of farmers JDE Peet's need to support through Common Grounds farmer projects.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;In reality, we have supported 211,079 farmers in 2023, through 63+ active projects globally.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />In 2022, in order to claim our volumes as Responsibly Sourced under Enveritas' verification, we needed to support 87,244.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ในปี 2022 เพื่ออ้างสิทธิ์ปริมาณของเราว่าจัดหาอย่างรับผิดชอบภายใต้การตรวจสอบของ Enveritas เราจำเป็นต้องสนับสนุน 87,244 ราย<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;In 2022, in order to claim our volumes as Responsibly Sourced under Enveritas' verification, we needed to support 87,244.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Some of these projects include:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />In reality, we have supported 211,079 farmers in 2023, through 63+ active projects globally.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ในความเป็นจริง เราได้สนับสนุนเกษตรกร 211,079 รายในปี 2023 ผ่านโครงการที่ใช้งานอยู่มากกว่า 63 โครงการทั่วโลก<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;In reality, we have supported 211,079 farmers in 2023, through 63+ active projects globally.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Child Labour Prevention Project Coffee Sector in Honduras&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Some of these projects include:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />โครงการเหล่านี้บางส่วนรวมถึง:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Some of these projects include:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Regrow Yirga in Ethiopia to enhance sustainable competitiveness of Ethiopian coffee sector&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Child Labour Prevention Project Coffee Sector in Honduras<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />โครงการป้องกันแรงงานเด็กในภาคกาแฟในฮอนดูรัส<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Child Labour Prevention Project Coffee Sector in Honduras&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Boosting Production of Low Carbon Coffee in Indonesia&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Regrow Yirga in Ethiopia to enhance sustainable competitiveness of Ethiopian coffee sector<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />Regrow Yirga ในเอธิโอเปียเพื่อเพิ่มขีดความสามารถในการแข่งขันอย่างยั่งยืนของภาคกาแฟเอธิโอเปีย<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Regrow Yirga in Ethiopia to enhance sustainable competitiveness of Ethiopian coffee sector&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Progress:&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Boosting Production of Low Carbon Coffee in Indonesia<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />เพิ่มการผลิตกาแฟคาร์บอนต่ำในอินโดนีเซีย<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Boosting Production of Low Carbon Coffee in Indonesia&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;We have a robust monitoring &amp;amp; evaluation (M&amp;amp;E) process in line with our Responsible Sourcing principles by measuring Key Performance Indicators of our projects to track and ensure the delivery of project output.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" /><ph type="structure-only" x="1" />Progress:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" /><ph type="structure-only" x="1" />ความคืบหน้า:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Progress:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;We measure the results and impacts of the programs and incorporate learnings for future intervention.&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />We have a robust monitoring &amp; evaluation (M&amp;E) process in line with our Responsible Sourcing principles by measuring Key Performance Indicators of our projects to track and ensure the delivery of project output.<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />เรามีกระบวนการติดตามและประเมินผล (M&amp;E) ที่แข็งแกร่งสอดคล้องกับหลักการจัดหาอย่างรับผิดชอบของเราโดยการวัดตัวชี้วัดผลการดำเนินงานหลักของโครงการของเราเพื่อติดตามและรับรองการส่งมอบผลผลิตของโครงการ<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044815Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;We have a robust monitoring &amp;amp; evaluation (M&amp;amp;E) process in line with our Responsible Sourcing principles by measuring Key Performance Indicators of our projects to track and ensure the delivery of project output.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Using the same project examples, our M&amp;amp;E framework engagement allowed us to:&lt;/seg&gt;</prop>
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" /><bpt i="2" type="structure-only" x="2" />We measure the results and impacts of the programs and incorporate learnings for future intervention.<ept i="2" /><ph type="structure-only" x="3" /><ph type="structure-only" x="4" /><ph type="structure-only" x="5" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><ph type="structure-only" x="0" /><ph type="structure-only" x="1" /><bpt i="2" type="structure-only" x="2" />เราวัดผลลัพธ์และผลกระทบของโปรแกรมและรวมการเรียนรู้สำหรับการแทรกแซงในอนาคต<ept i="2" /><ph type="structure-only" x="3" /><ph type="structure-only" x="4" /><ph type="structure-only" x="5" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044815Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;We measure the results and impacts of the programs and incorporate learnings for future intervention.&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Protect 675 children who are at risk of exploitation in 4 regions of Honduras&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Using the same project examples, our M&amp;E framework engagement allowed us to:<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />โดยใช้ตัวอย่างโครงการเดียวกัน กรอบการมีส่วนร่วม M&amp;E ของเราทำให้เราสามารถ:<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044814Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Using the same project examples, our M&amp;amp;E framework engagement allowed us to:&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Stumped 2,000,000 coffee trees in Ethiopia&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Protect 675 children who are at risk of exploitation in 4 regions of Honduras<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ปกป้องเด็ก 675 คนที่มีความเสี่ยงต่อการถูกแสวงหาประโยชน์ใน 4 ภูมิภาคของฮอนดูรัส<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044815Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Protect 675 children who are at risk of exploitation in 4 regions of Honduras&lt;/seg&gt;</prop>
+<prop type="x-context-post">&lt;seg&gt;Train 6,000 farmers on regenerative agriculture practices, reduce farming carbon footprint, and planted 300,000 trees as agroforestry and riparian buffers in Indonesia&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Stumped 2,000,000 coffee trees in Ethiopia<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ตัดต้นกาแฟ 2,000,000 ต้นในเอธิโอเปีย<ept i="0" /></seg>
+</tuv>
+</tu>
+
+<tu creationdate="20240419T032318Z" changedate="20240419T044815Z">
+<tuv xml:lang="en">
+<prop type="x-context-pre">&lt;seg&gt;Stumped 2,000,000 coffee trees in Ethiopia&lt;/seg&gt;</prop>
+<seg><bpt i="0" type="structure-only" x="0" />Train 6,000 farmers on regenerative agriculture practices, reduce farming carbon footprint, and planted 300,000 trees as agroforestry and riparian buffers in Indonesia<ept i="0" /></seg>
+</tuv>
+<tuv xml:lang="th">
+<seg><bpt i="0" type="structure-only" x="0" />ฝึกอบรมเกษตรกร 6,000 คนเกี่ยวกับแนวปฏิบัติด้านเกษตรกรรมฟื้นฟู ลดรอยเท้าคาร์บอนจากการทำฟาร์ม และปลูกต้นไม้ 300,000 ต้นเป็นวนเกษตรและแนวกันชนริมน้ำในอินโดนีเซีย<ept i="0" /></seg>
+</tuv>
+</tu>
+
+</body>
+</tmx>
