@@ -1,5 +1,6 @@
 import sqlite3
 from StringUtils import StringUtils
+from BooleanSettingsWrapper import BooleanSettingsWrapper
 
 class FileBasedTranslationMemory:
     def __init__(self, tmPath):
@@ -98,7 +99,12 @@ class FileBasedTranslationMemory:
             raise ('ErrorCode.StorageVersionDataOutdated')
 
     def __get_tms(self, cursor, query):
-        
+        list = []
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        for row in rows:
+            #start here
+        return list
     def _getTms(self, cursor):
         self._checkVersion(cursor)
 
