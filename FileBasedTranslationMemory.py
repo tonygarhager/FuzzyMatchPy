@@ -3,14 +3,29 @@ import datetime
 from StringUtils import StringUtils
 from BooleanSettingsWrapper import BooleanSettingsWrapper
 from TranslationMemory import TranslationMemory
-
+from Resource import Resource
+from DefaultFallbackRecognizer import DefaultFallbackRecognizer
 
 class FileBasedTranslationMemory:
     def __init__(self, tmPath):
+
+        self.tm = None
         # Set file path
         self.FilePath = tmPath
+        self._create_connection()
         if self.FilePath.endswith('.sdltm'):
             self._importSdltmFile()
+
+    def destruct(self):
+        self._close_connection()
+
+    def _create_connection(self):
+        self.conn = sqlite3.connect(self.FilePath)
+        self.cursor = self.conn.cursor()
+
+    def _close_connection(self):
+        if self.conn:
+            self.conn.close()
 
     def _getParameter(self, name):
         try:
@@ -29,13 +44,72 @@ class FileBasedTranslationMemory:
             query = 'INSERT INTO parameters (name, value) VALUES (\'' + name + '\', \'' + value + '\')'
             self.cursor.execute(query)
 
+    def get_resources_write_count(self):
+        parameter = self._getParameter('RESWRCNT')
+        try:
+            result = int(parameter)
+        except ValueError:
+            return 0
+        return result
+
+    #SqliteStorage::GetTm
+    def get_tm(self, _id):
+        self._check_version()
+        query = "SELECT id, guid, name, source_language, target_language, copyright, description, settings, \r\n\t\t\t\tcreation_user, creation_date, expiration_date, fuzzy_indexes, last_recompute_date, last_recompute_size " + self._get_fga_colspec() + self._get_cm_colspec() + " FROM translation_memories WHERE id = " + str(_id)
+        tms = self.__get_tms(query)
+
+        tm = None
+
+        if len(tms) > 0:
+            tm = tms[0]
+        return tm
+
+    #ResourceManager::GetTranslationMemory
+    def get_translation_memory(self, _id):
+        tm = self.get_tm(_id)
+        return tm
+
+    #ResourceManager::GetLanguageResources
+    def get_language_resources(self, _id, _include_data):
+        return self.get_resources(_id, _include_data)
+
+    #SqliteStorage::GetResources
+    def get_resources(self, _id, _include_data):
+        self._check_version()
+        query = 'SELECT r.id, r.guid, r.type, r.language, r.data \r\n\t\t\t\tFROM resources r INNER JOIN tm_resources tr ON r.id = tr.resource_id\r\n\t\t\t\tWHERE tr.tm_id = ' + str(_id);
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+
+        lst = []
+        for row in rows:
+            n = int(row[0])
+            guid = row[1]
+            resource_type = int(row[2])
+            language = str(row[3])
+            data = None
+            if _include_data:
+                data = row[4]
+
+            lst.append(Resource(n, guid, resource_type, language, data))
+
+        return lst
+
+    #CallContext::GetAnnotatedTranslationMemory
+    #AnnotatedTmManager::GetAnnotatedTranslationMemory
+    def get_annotated_translation_memory(self, _id):
+        annotated_tm = {}
+        annotated_tm['resources_write_count'] = self.get_resources_write_count()
+        annotated_tm['language_resources'] = self.get_language_resources(_id, True)
+        annotated_tm['tm'] = self.get_translation_memory(_id)
+        return annotated_tm
+
     def _get_cm_colspec(self):
         result = ", 0, " + str(1) + ", 0"
         if self.can_choose_text_context_match_type:
             result = ", data_version, text_context_match_type, id_context_match"
         return result
 
-    def _checkVersion(self):
+    def _check_version(self):
         # Check Version
         text = self._getParameter('VERSION')
         createdVersion = self._getParameter('VERSION_CREATED')
@@ -136,7 +210,7 @@ class FileBasedTranslationMemory:
 
     #SqliteStorage::GetTms(DbCommand cmd)
     def __get_tms(self, query):
-        list = []
+        lst = []
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         for row in rows:
@@ -174,24 +248,22 @@ class FileBasedTranslationMemory:
             translationMemory.text_context_match_type = int(row[16])
             translationMemory.id_context_match = bool(row[17])
             translationMemory.can_report_reindex_required = self.can_report_reindex_required
-            list.append(translationMemory)
+            lst.append(translationMemory)
 
-        return list
+        return lst
 
     #SqliteStorage::GetTms()
     def _get_tms(self):
-        self._checkVersion()
+        self._check_version()
         return self.__get_tms('SELECT id, guid, name, source_language, target_language, copyright, description, settings, \r\n\t\t\t\tcreation_user, creation_date, expiration_date, fuzzy_indexes, last_recompute_date, last_recompute_size' + self._get_fga_colspec() + self._get_cm_colspec() + ' FROM translation_memories')
 
     def _importSdltmFile(self):
-        try:
-            conn = sqlite3.connect(self.FilePath)
-            self.cursor = conn.cursor()
-            self._get_tms()
+        lst = self._get_tms()
+        self.tm = lst[0]
 
-        except sqlite3.Error as e:
-            print(f"Error reading SDLTM file: {e}")
-            return []
-        finally:
-            if conn:
-                conn.close()
+    def search_translation_unit(self, settings, tu):
+        annotated_translation_memory = self.get_annotated_translation_memory(self.tm.id)
+        annotated_translation_unit = {}
+        annotated_translation_unit['translation_unit'] = tu
+        recognizer = DefaultFallbackRecognizer(annotated_translation_memory['language_resources'])
+        recognizer.recognize('Our Belief', 0,False)

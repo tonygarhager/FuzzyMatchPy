@@ -1,5 +1,4 @@
 import datetime
-from LanguagePair import LanguagePair
 
 class TranslationMemory:
     def __init__(self,
@@ -22,7 +21,10 @@ class TranslationMemory:
         self.creationUser = _creationUser
         self.creationDate = _creationDate
 
-        self.languageDirection = LanguagePair(_srcLang, _trgLang)
+        self.languageDirection = {}
+        self.languageDirection['srcLang'] = _srcLang
+        self.languageDirection['trgLang'] = _trgLang
+
         self.copyright = _copyright
         self.description = _description
 
