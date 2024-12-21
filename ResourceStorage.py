@@ -1,4 +1,5 @@
 from ResourceReader import ResourceReader
+from CultureInfoExtensions import CultureInfoExtensions
 
 class ResourceStorage:
     def __init__(self):
@@ -82,8 +83,31 @@ class ResourceStorage:
     def find(self, full_name):
         return next((s for s in self.resources.keys() if s.lower() == full_name.lower()), None)
 
+    def get_resource_name(self, culture_name, t, fall_back):
+        name = self.get_name(culture_name, t)
+        text = self.find(name)
+
+        if not fall_back:
+            return text
+
+        flag = False
+
+        while text is None and culture_name != 'InvariantCulture':
+            if CultureInfoExtensions.get_parent_culture(culture_name) and not flag:
+                language_group_name = CultureInfoExtensions.get_language_group_name(culture_name)
+
+                if language_group_name is not None:
+                    name = self.get_name(language_group_name, t)
+                    text = self.find(name)
+                flag = True
+            else:
+                culture_name = CultureInfoExtensions.get_parent_culture(culture_name)
+                name = self.get_name(culture_name, t)
+                text = self.find(name)
+
+        return text
+
+
 if __name__ == "__main__":
     storage = ResourceStorage()
-    name = storage.get_name('en-US', 'CurrencySymbols')
-    name = storage.find(name)
-    print(name)
+    storage.get_resource_name('en-US', 'CurrencySymbols', True)

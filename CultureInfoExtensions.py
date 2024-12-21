@@ -4,6 +4,7 @@ import win32con
 class CultureInfoExtensions:
     legacy_language_mapping = {}
     legacy_language_codes = {}
+    _locale_to_group_mapping = {}
 
     @staticmethod
     def __init__():
@@ -100,6 +101,11 @@ class CultureInfoExtensions:
         CultureInfoExtensions.legacy_language_codes["ns"] = "nso-ZA"
         CultureInfoExtensions.legacy_language_codes["ns-ZA"] = "nso-ZA"
 
+        
+
+    @staticmethod
+    def get_language_group_id(culture_name):
+        pass###imp
     @staticmethod
     def get_lcid_from_locale(locale_name):
         # Use the GetLocaleInfo function to retrieve the LCID for a given culture name
