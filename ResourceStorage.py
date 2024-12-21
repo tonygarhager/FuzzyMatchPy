@@ -130,9 +130,6 @@ class ResourceStorage:
         if not resource_data:
             return None
 
-        with open("output_file.bin", "wb") as file:
-            file.write(resource_data)
-
         memory_stream = io.BytesIO()
         memory_stream.write(resource_data)
         memory_stream.seek(0)
