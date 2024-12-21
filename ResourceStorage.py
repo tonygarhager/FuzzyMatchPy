@@ -1,3 +1,5 @@
+import io
+import base64
 from ResourceReader import ResourceReader
 from CultureInfoExtensions import CultureInfoExtensions
 
@@ -75,7 +77,7 @@ class ResourceStorage:
 
     def get_name(self, culture_prefix, t):
         sb = ''
-        if culture_prefix is not None:
+        if culture_prefix is not None and culture_prefix != '':
             sb += culture_prefix + '_'
         sb += ResourceStorage.get_resource_type_name(t)
         return sb
@@ -93,7 +95,7 @@ class ResourceStorage:
         flag = False
 
         while text is None and culture_name != 'InvariantCulture':
-            if CultureInfoExtensions.get_parent_culture(culture_name) and not flag:
+            if CultureInfoExtensions.get_lcid_from_culture_name(CultureInfoExtensions.get_parent_culture(culture_name)) == 127 and not flag:
                 language_group_name = CultureInfoExtensions.get_language_group_name(culture_name)
 
                 if language_group_name is not None:
@@ -107,7 +109,40 @@ class ResourceStorage:
 
         return text
 
+    def get_resource_status(self, culture_name, t, fall_back):
+        resource_name = self.get_resource_name(culture_name, t, fall_back)
+
+        if resource_name is not None:
+            return 'Loadable'
+        return 'NotAvailable'
+
+    def get_resource_data(self, culture_name, t, fall_back):
+        resource_name = self.get_resource_name(culture_name, t, fall_back)
+
+        if resource_name is not None and self.resources.get(resource_name) is not None:
+            str = self.resources.get(resource_name)
+            byte_array = base64.b64decode(str)
+            return byte_array
+        return None
+
+    def read_resource_data(self, culture_name, t, fall_back):
+        resource_data = self.get_resource_data(culture_name, t, fall_back)
+        if not resource_data:
+            return None
+
+        with open("output_file.bin", "wb") as file:
+            file.write(resource_data)
+
+        memory_stream = io.BytesIO()
+        memory_stream.write(resource_data)
+        memory_stream.seek(0)
+
+        return memory_stream
 
 if __name__ == "__main__":
     storage = ResourceStorage()
-    storage.get_resource_name('en-US', 'CurrencySymbols', True)
+    memory_stream = storage.read_resource_data('en-US', 'CurrencySymbols', True)
+    from Wordlist import Wordlist
+    wordlist = Wordlist()
+    wordlist.load_internal(memory_stream, True)
+
