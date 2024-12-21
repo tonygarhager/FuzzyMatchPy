@@ -1,0 +1,9 @@
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\bin\Debug\ResCvter.exe.config
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\bin\Debug\ResCvter.exe
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\bin\Debug\ResCvter.pdb
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\bin\Debug\Newtonsoft.Json.dll
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\obj\Debug\ResCvter.csproj.AssemblyReference.cache
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\obj\Debug\ResCvter.csproj.CoreCompileInputs.cache
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\obj\Debug\ResCvter.csproj.Up2Date
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\obj\Debug\ResCvter.exe
+E:\work\FuzzyMatchPy\ResCvter\ResCvter\obj\Debug\ResCvter.pdb
