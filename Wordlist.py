@@ -1,4 +1,5 @@
 import re
+import io
 
 class SearchOption:
     none = 0
@@ -127,3 +128,16 @@ class Wordlist:
 
                 if not ignore_comments:
                     self.add(text)
+
+    def load_fn(self, filename, ignore_comments=True):
+        with open(filename, 'r', encoding='utf-8') as reader:
+            self.load_internal(reader, ignore_comments)
+
+    def load_stream(self, stream, ignore_comments=True):
+        self.load_internal(stream, ignore_comments)
+
+    def load_bytes(self, data, ignore_comments=True):
+        memory_stream = io.BytesIO()
+        memory_stream.write(data)
+        memory_stream.seek(0)
+        self.load_internal(memory_stream, ignore_comments)
