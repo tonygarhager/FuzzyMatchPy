@@ -1,11 +1,12 @@
 import locale
-import win32api
-import win32con
+import json
+
 class CultureInfoExtensions:
     legacy_language_mapping = {}
     legacy_language_codes = {}
     _locale_to_group_mapping = {}
     _region_qualified_culture_mapping = {}
+    _lcid_map = {}
     romance_languages = {
 				"fr",
 				"es",
@@ -29,6 +30,8 @@ class CultureInfoExtensions:
 			}
     @staticmethod
     def __init__():
+        with open('lcid.json', 'r', encoding='utf-8') as filelcid:
+            CultureInfoExtensions._lcid_map = json.load(filelcid)
         CultureInfoExtensions.legacy_language_codes["no-no"] = "nb-NO"
         CultureInfoExtensions.legacy_language_codes["no-ny"] = "nn-NO"
         CultureInfoExtensions.legacy_language_codes["no-xy"] = "nn-NO"
@@ -824,14 +827,17 @@ class CultureInfoExtensions:
 
     @staticmethod
     def get_language_group_id(culture_name):
-        pass###imp
+        lcid = CultureInfoExtensions.get_lcid_from_culture_name(culture_name)
+        if CultureInfoExtensions._locale_to_group_mapping.get(lcid, None) is not None:
+            return CultureInfoExtensions._locale_to_group_mapping[lcid]
+        return 'Unknown'
+
     @staticmethod
-    def get_lcid_from_locale(locale_name):
-        # Use the GetLocaleInfo function to retrieve the LCID for a given culture name
-        try:
-            return win32api.GetLocaleInfo(win32con.LOCALE_SENGLANGUAGE, locale_name)
-        except Exception as e:
-            print(f"Error retrieving LCID for {locale_name}: {e}")
+    def get_lcid_from_culture_name(culture_name):
+        # Use LOCALE_NAME to retrieve the LCID
+        if CultureInfoExtensions._lcid_map.get(culture_name, None) is not None:
+            return CultureInfoExtensions._lcid_map[culture_name]
+        return 'Unknown'
 
     @staticmethod
     def get_parent_culture(culture_name):
@@ -894,4 +900,5 @@ if __name__ == "__main__":
     ret = CultureInfoExtensions.get_culture_info('en-US')
     ret = CultureInfoExtensions.get_parent_culture(ret)
     ret = CultureInfoExtensions.get_parent_culture(ret)
+    ret = CultureInfoExtensions.get_language_group_id('en-US')
     print(ret)
