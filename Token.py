@@ -40,5 +40,8 @@ class Token:
     def is_whitespace(self):
         type == TokenType.Whitespace
 
+    def is_placeable(self):
+        return False
+
 
 
