@@ -11,6 +11,25 @@ from NumberToken import NumberToken
 from TokenBundle import TokenBundle
 from DateTimeToken import DateTimeToken
 
+class TokenizerFlags:
+    NoFlags = 0
+    BreakOnHyphen = 1
+    BreakOnDash = 2
+    BreakOnApostrophe = 4
+    AllFlags = 3
+    DefaultFlags = 7
+
+class BuiltinRecognizers:
+    RecognizeNone = 0
+    RecognizeDates = 1
+    RecognizeTimes = 2
+    RecognizeNumbers = 4
+    RecognizeAcronyms = 8
+    RecognizeVariables = 16
+    RecognizeMeasurements = 32
+    RecognizeAlphaNumeric = 64
+    RecognizeAll = 127
+    
 class Tokenizer:
     max_acro_length = 6
     def __init__(self, parameters: TokenizerParameters):

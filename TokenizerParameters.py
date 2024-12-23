@@ -2,6 +2,7 @@ from Wordlist import Wordlist
 from StringUtils import StringUtils
 from DefaultFallbackRecognizer import DefaultFallbackRecognizer
 from LanguageResources import LanguageResources
+from TokenizerSetup import TokenizerSetup
 
 class TokenizerParameters:
     uri_priority = 100
@@ -15,7 +16,7 @@ class TokenizerParameters:
     alphanumeric_priority = 60
     fallback_priority = 0
 
-    def __init__(self, setup):
+    def __init__(self, setup:TokenizerSetup):
         self.advanced_tokenization_stopword_list = Wordlist()
         self.break_on_whitespace = False
         self.create_whitespace_tokens = False
@@ -23,9 +24,9 @@ class TokenizerParameters:
         self.variables = []
 
         #constructor
-        self.break_on_whitespace = setup['break_on_whitespace']
-        self.create_whitespace_tokens = setup['create_whitespace_tokens']
-        self.culture_name = setup['culture_name']
+        self.break_on_whitespace = setup.break_on_whitespace
+        self.create_whitespace_tokens = setup.create_whitespace_tokens
+        self.culture_name = setup.culture_name
         self.reclassify_achronyms = False
         #mod
         language_resources = LanguageResources(self.culture_name)
