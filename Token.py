@@ -1,4 +1,5 @@
 from SegmentRange import SegmentRange
+from SegmentElement import SegmentElement
 
 class TokenType:
     Unknown = -1
@@ -21,7 +22,7 @@ class TokenType:
     Tag = 16
     AlphaNumeric = 17
 
-class Token:
+class Token(SegmentElement):
     def __init__(self, culture_name, text = None):
         self.culture_name = culture_name
         self.text = text
@@ -41,6 +42,9 @@ class Token:
         type == TokenType.Whitespace
 
     def is_placeable(self):
+        return False
+
+    def is_substitutable(self):
         return False
 
 

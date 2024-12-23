@@ -1,5 +1,6 @@
 import locale
 import json
+from StringUtils import StringUtils
 
 class CultureInfoExtensions:
     legacy_language_mapping = {}
@@ -900,6 +901,10 @@ class CultureInfoExtensions:
         CultureInfoExtensions.legacy_language_mapping[text] = ret
 
         return ret
+
+    @staticmethod
+    def use_blank_as_word_separator(culture_name):
+        return not StringUtils.get_iso_language_code(culture_name) in CultureInfoExtensions.use_blank_as_word_separator_exceptions
 
 if __name__ == "__main__":
     CultureInfoExtensions.__init__()

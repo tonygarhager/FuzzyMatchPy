@@ -111,5 +111,32 @@ class StringUtils:
         twoletter = StringUtils.get_iso_language_code(culture_name)
         return twoletter == 'ja' or twoletter == 'zh' or twoletter == 'ko'
 
-    if __name__ == "__main__":
-        print(get_iso_language_code("en-US"))
+    @staticmethod
+    # Helper function to check if a character is an apostrophe
+    def is_apostrophe(ch):
+        # Define apostrophe-like characters
+        apostrophe_chars = {"'", "’"}  # Adjust this set based on your requirements
+        return ch in apostrophe_chars
+
+    @staticmethod
+    def is_latin_letter(c):
+        """
+        Determines if the given character is a Latin letter.
+
+        :param c: A single character string.
+        :return: True if the character is a Latin letter, False otherwise.
+        """
+        if len(c) != 1:
+            raise ValueError("Input must be a single character.")
+
+        if ord(c) < 0x3000:
+            return c.isalpha() and not StringUtils.is_apostrophe(c)
+        return ('Ａ' <= c <= 'Ｚ') or ('ａ' <= c <= 'ｚ')
+
+
+if __name__ == "__main__":
+    print(StringUtils.is_latin_letter('A'))  # True
+    print(StringUtils.is_latin_letter('ａ'))  # True
+    print(StringUtils.is_latin_letter('你'))  # False
+    print(StringUtils.is_latin_letter("'"))  # False
+    print(StringUtils.is_latin_letter('Ａ'))

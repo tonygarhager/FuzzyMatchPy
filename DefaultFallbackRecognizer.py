@@ -1,6 +1,7 @@
 from StringUtils import StringUtils
+from Recognizer import Recognizer
 
-class DefaultFallbackRecognizer:
+class DefaultFallbackRecognizer(Recognizer):
     def __init__(self, _language_resources, _priority):
         self.priority = _priority
         self.language_resources = _language_resources
