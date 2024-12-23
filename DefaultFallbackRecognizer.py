@@ -1,7 +1,8 @@
 from StringUtils import StringUtils
 
 class DefaultFallbackRecognizer:
-    def __init__(self, _language_resources):
+    def __init__(self, _language_resources, _priority):
+        self.priority = _priority
         self.language_resources = _language_resources
         self.settings = {}
         self.settings['BreakOnHyphen'] = True

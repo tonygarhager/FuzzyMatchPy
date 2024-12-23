@@ -1,4 +1,5 @@
 import unicodedata
+import pycountry
 
 class StringUtils:
     @staticmethod
@@ -75,3 +76,40 @@ class StringUtils:
                 (0xAC00 <= char_code <= 0xD7AF):
             return True
         return False
+
+    @staticmethod
+    def half_width_to_full_width(input_str):
+        # Convert the input string to a list of characters
+        array = list(input_str)
+
+        for i in range(len(array)):
+            if array[i] == ' ':
+                # Convert half-width space to full-width space
+                array[i] = '\u3000'
+            elif ord(array[i]) < 0x007f:
+                # Convert half-width character to full-width
+                array[i] = chr(ord(array[i]) + 0xFEE0)
+
+        # Join the list back into a string and return
+        return ''.join(array)
+
+    @staticmethod
+    def get_iso_language_code(culture_name):
+        try:
+            # Split culture name to extract the language part (e.g., "en-US" -> "en")
+            language_code = culture_name.split('-')[0]
+            # Look up the language in pycountry
+            language = pycountry.languages.get(alpha_2=language_code)
+            if language:
+                return language.alpha_2  # Return the two-letter ISO code
+        except Exception:
+            pass
+        return None  # Return None if not found
+
+    @staticmethod
+    def use_fullwidth(culture_name):
+        twoletter = StringUtils.get_iso_language_code(culture_name)
+        return twoletter == 'ja' or twoletter == 'zh' or twoletter == 'ko'
+
+    if __name__ == "__main__":
+        print(get_iso_language_code("en-US"))
