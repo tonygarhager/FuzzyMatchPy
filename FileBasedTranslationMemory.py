@@ -5,11 +5,13 @@ from BooleanSettingsWrapper import BooleanSettingsWrapper
 from TranslationMemory import TranslationMemory
 from Resource import Resource
 from DefaultFallbackRecognizer import DefaultFallbackRecognizer
+from typing import List
+from SearchSettings import *
 
 class FileBasedTranslationMemory:
     def __init__(self, tmPath):
 
-        self.tm = None
+        self.tm:TranslationMemory = None
         # Set file path
         self.FilePath = tmPath
         self._create_connection()
@@ -209,7 +211,7 @@ class FileBasedTranslationMemory:
         return result
 
     #SqliteStorage::GetTms(DbCommand cmd)
-    def __get_tms(self, query):
+    def __get_tms(self, query) -> List[TranslationMemory]:
         lst = []
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
@@ -257,13 +259,18 @@ class FileBasedTranslationMemory:
         self._check_version()
         return self.__get_tms('SELECT id, guid, name, source_language, target_language, copyright, description, settings, \r\n\t\t\t\tcreation_user, creation_date, expiration_date, fuzzy_indexes, last_recompute_date, last_recompute_size' + self._get_fga_colspec() + self._get_cm_colspec() + ' FROM translation_memories')
 
-    def _importSdltmFile(self):
+    def _importSdltmFile(self) -> TranslationMemory:
         lst = self._get_tms()
         self.tm = lst[0]
 
-    def search_translation_unit(self, settings, tu):
-        annotated_translation_memory = self.get_annotated_translation_memory(self.tm.id)
-        annotated_translation_unit = {}
-        annotated_translation_unit['translation_unit'] = tu
-        recognizer = DefaultFallbackRecognizer(annotated_translation_memory['language_resources'])
-        recognizer.recognize('Our Belief', 0,False)
+    def search_translation_unit(self, settings:SearchSettings, tu):
+        is_concordance_search = settings.is_concordance_search()
+        flag = settings.mode == SearchMode.TargetConcordanceSearch
+
+        if settings.min_score < SearchSettings.min_score_lower_bound:
+            settings.min_score = SearchSettings.min_score_lower_bound
+
+        if settings.max_results < 1:
+            settings.max_results = 1
+
+

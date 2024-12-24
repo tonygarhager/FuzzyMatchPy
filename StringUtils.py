@@ -1,7 +1,52 @@
 import unicodedata
 import pycountry
+from typing import List
+from typing import Tuple
 
 class StringUtils:
+    whitespace_characters = ['\t',
+			'\n',
+			'\v',
+			'\f',
+			'\r',
+			' ',
+			'\u0085',
+			'\u00a0',
+			'\u1680',
+			'᠎',
+			'\u2000',
+			'\u2001',
+			'\u2002',
+			'\u2003',
+			'\u2004',
+			'\u2005',
+			'\u2006',
+			'\u2007',
+			'\u2008',
+			'\u2009',
+			'\u200a',
+			'\u2028',
+			'\u2029',
+			'\u202f',
+			'\u205f',
+			'\u3000']
+    blanks = [' ',
+			'\u00a0',
+			'\u1680',
+			'\u2000',
+			'\u2001',
+			'\u2002',
+			'\u2003',
+			'\u2004',
+			'\u2005',
+			'\u2006',
+			'\u2007',
+			'\u2008',
+			'\u2009',
+			'\u200a',
+			'\u202f',
+			'\u205f',
+			'\u3000']
     @staticmethod
     def compare_ordinal_ignore_case(str1, str2):
         # Convert both strings to lowercase for case-insensitive comparison
@@ -132,6 +177,50 @@ class StringUtils:
         if ord(c) < 0x3000:
             return c.isalpha() and not StringUtils.is_apostrophe(c)
         return ('Ａ' <= c <= 'Ｚ') or ('ａ' <= c <= 'ｚ')
+
+    @staticmethod
+    def get_prefix_length(s:str, prefix_chars:List[str]) -> int:
+        if not s or len(s) == 0:
+            return 0
+        if not prefix_chars or len(prefix_chars) == 0:
+            return 0
+        for i in range(len(s)):
+            if s[i] not in prefix_chars:
+                return i
+        return len(s)
+
+    @staticmethod
+    def get_suffix_length(s:str, suffix_chars:List[str]) -> int:
+        if not s or len(s) == 0:
+            return 0
+        if not suffix_chars or len(suffix_chars) == 0:
+            return 0
+        num = len(s) - 1
+        i = num
+        while i >= 0:
+            if s[i] not in suffix_chars:
+                return num - i
+            i -= 1
+        return len(s)
+
+    @staticmethod
+    def trim_start(s:str, trim_characters:List[str]) -> Tuple[str, str]:
+        trimmed_prefix:str = None
+        prefix_length:int = StringUtils.get_prefix_length(s, trim_characters)
+        if prefix_length <= 0:
+            return s, trimmed_prefix
+        trimmed_prefix = s[:prefix_length]
+        return s[prefix_length:], trimmed_prefix
+
+    @staticmethod
+    def trim_end(s:str, trim_characters:List[str]) -> Tuple[str, str]:
+        trimmed_suffix:str = None
+        suffix_length:int = StringUtils.get_suffix_length(s, trim_characters)
+        if suffix_length <= 0:
+            return s, trimmed_suffix
+        length = len(s)
+        trimmed_suffix = s[length - suffix_length:]
+        return s[:length - suffix_length], trimmed_suffix
 
 
 if __name__ == "__main__":

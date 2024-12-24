@@ -7,6 +7,8 @@ from fuzzy_searcher import FuzzySearcher
 from FileBasedTranslationMemory import FileBasedTranslationMemory
 from TranslationUnit import TranslationUnit
 from SearchSettings import SearchSettings
+from FileBasedTMHelper import FileBasedTMHelper
+
 import sqlite3
 
 def read_sdltm(file_path):
@@ -79,18 +81,18 @@ class TradosHandler:
         match_result = self.matcher.search(source_text)
         return match_result
 
-def get_search_setting(_mode, _max_results, _min_score):
-    return SearchSettings(_mode, _max_results, _min_score)
-
 def main(args):
     # Example Usage
     path = "test/test.sdltm"
     source_segment = "Our Belief"
 
-    ftm = FileBasedTranslationMemory(path)
-    tu = TranslationUnit(ftm.tm.languageDirection['srcLang'], ftm.tm.languageDirection['trgLang'])
-    search_setting = get_search_setting(False, 5, 70)
-    ftm.search_translation_unit(search_setting, tu)
+    helper = FileBasedTMHelper()
+    helper.fuzzy_search(path, source_segment, 5, 70)
+
+    #ftm = FileBasedTranslationMemory(path)
+    #tu = TranslationUnit(ftm.tm.languageDirection['srcLang'], ftm.tm.languageDirection['trgLang'])
+    #search_setting = get_search_setting(False, 5, 70)
+    #ftm.search_translation_unit(search_setting, tu)
     #trados_handler = TradosHandler(tmx_path)
     #match_result = trados_handler.fuzzy_match(source_segment)
 

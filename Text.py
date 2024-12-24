@@ -1,8 +1,8 @@
 from SegmentElement import SegmentElement
 
 class Text(SegmentElement):
-    def __init__(self, text = None):
-        self.value = text
+    def __init__(self, text:str = None):
+        self.value:str = text
 
     def duplicate(self):
         text = Text(self.value)
