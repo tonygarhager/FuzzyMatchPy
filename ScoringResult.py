@@ -89,7 +89,7 @@ class ScoringResult:
         if self.find_applied_filter(filter_name) is not None:
             return
         if not self.applied_penalties:
-            self.applied_penalties = List[AppliedPenalty]()
+            self.applied_penalties = List[AppliedPenalty]
         applied_penalty = AppliedPenalty(PenaltyType.FilterPenalty, malus)
         applied_penalty.filter_name = filter_name
         self.applied_penalties.append(applied_penalty)

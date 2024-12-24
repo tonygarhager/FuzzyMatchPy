@@ -1,3 +1,4 @@
+from SortSpecification import *
 
 class SearchMode:
     ExactSearch = 0
@@ -16,6 +17,7 @@ class SearchSettings:
         self.mode = _mode
         self.max_results = _max_results
         self.min_score = _min_score
+        self.sort_spec: SortSpecification = None
 
     def is_concordance_search(self) -> bool:
         return self.mode == SearchMode.ConcordanceSearch or self.mode == SearchMode.TargetConcordanceSearch

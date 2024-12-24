@@ -2,9 +2,9 @@ from StringUtils import StringUtils
 from Recognizer import Recognizer
 
 class DefaultFallbackRecognizer(Recognizer):
-    def __init__(self, _language_resources, _priority):
+    def __init__(self, settings, type, _priority, culture_name:str, _data_accessor):
         self.priority = _priority
-        self.language_resources = _language_resources
+        self.language_resources = _data_accessor
         self.settings = {}
         self.settings['BreakOnHyphen'] = True
         self.settings['BreakOnDash'] = True

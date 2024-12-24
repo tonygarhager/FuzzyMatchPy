@@ -1,4 +1,3 @@
-from TokenizerParameters import TokenizerParameters
 from Segment import Segment
 from Tag import Tag
 from Token import *
@@ -19,20 +18,9 @@ class TokenizerFlags:
     AllFlags = 3
     DefaultFlags = 7
 
-class BuiltinRecognizers:
-    RecognizeNone = 0
-    RecognizeDates = 1
-    RecognizeTimes = 2
-    RecognizeNumbers = 4
-    RecognizeAcronyms = 8
-    RecognizeVariables = 16
-    RecognizeMeasurements = 32
-    RecognizeAlphaNumeric = 64
-    RecognizeAll = 127
-    
 class Tokenizer:
     max_acro_length = 6
-    def __init__(self, parameters: TokenizerParameters):
+    def __init__(self, parameters):
         self.parameters = parameters
 
     def tokenize(self, s, allow_token_bundles):
@@ -61,9 +49,65 @@ class Tokenizer:
                 if not list2 and len(list2) > 0:
                     list.extend(list2)
 
-        self.reclassify_achronyms(list, enhanced_asian)
+        self.reclassify_acronyms(list, enhanced_asian)
         self.adjust_number_range_tokenization(list)
         return list
+
+    @staticmethod
+    def count_letters(s:str, upper:int, lower:int, no_case:int, no_char:int):
+        for c in s:
+            if c.isupper():
+                upper += 1
+            elif c.islower():
+                lower += 1
+            elif c.isaplha():
+                no_case += 1
+            else:
+                no_char += 1
+        return upper, lower, no_case, no_char
+
+    def reclassify_acronyms(self, tokens, enhanced_asian):
+        if self.parameters.reclassify_achronyms == False:
+            return
+
+        acronym_tokens = [token for token in tokens if token.type == TokenType.Acronym]
+
+        if not acronym_tokens:
+            return
+
+        if enhanced_asian:
+            num = 0
+            for token in acronym_tokens:
+                if len(token.Text) > 6 and isinstance(token, SimpleToken):
+                    token.Type = TokenType.Word
+                else:
+                    num += 1
+            if num == 0:
+                return
+
+        num2, num3, num4, num5 = 0, 0, 0, 0
+        num6 = 0
+        for token in tokens:
+            if token.type in [TokenType.Word, TokenType.Abbreviation, TokenType.CharSequence, TokenType.Acronym]:
+                num6 += 1
+                num2, num3, num4, num5 = Tokenizer.count_letters(token.text, num2, num3, num4, num5)
+
+        num7 = num3 * 2
+        if enhanced_asian:
+            num7 = (num3 + num4) * 2
+
+        if num2 <= num7:
+            return
+
+        if num6 == 1:
+            if any(token.type in [TokenType.Abbreviation, TokenType.AlphaNumeric, TokenType.CharSequence,
+                                  TokenType.Date, TokenType.Measurement, TokenType.Number, TokenType.Time,
+                                  TokenType.Variable, TokenType.Word, TokenType.Uri] for token in tokens):
+                return
+
+        for token in tokens:
+            if token.type == TokenType.Acronym and isinstance(token, SimpleToken) and '&' not in token.Text:
+                token.type = TokenType.Word
 
     def tokenize_internal(self, s:str, current_run:int, create_whitespace_tokens:bool, allow_token_bundles:bool, recognizers:[]):
         list = []

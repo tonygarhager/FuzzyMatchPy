@@ -6,7 +6,7 @@ class Segment:
     def __init__(self, culture_name:str = 'InvariantCulture'):
         self.elements = []
         self.culture_name = culture_name
-        self.tokens = []
+        self.tokens = None
 
     def is_empty(self):
         return not self.elements or len(self.elements) == 0

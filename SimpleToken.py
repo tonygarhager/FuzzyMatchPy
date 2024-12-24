@@ -43,5 +43,9 @@ class SimpleToken(Token):
                 return SegmentElement.Similarity.Non
             return SegmentElement.Similarity.IdenticalValueAndType
 
-
+class GenericPlaceableToken(SimpleToken):
+    def __init__(self, text:str, token_class:str, is_subtitutable:bool):
+        super().__init__(text, TokenType.OtherTextPlaceable)
+        self.token_class = token_class
+        self.is_subtitutable = is_subtitutable
 

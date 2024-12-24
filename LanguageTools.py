@@ -8,6 +8,7 @@ from TokenizerHelper import TokenizerHelper
 from IStemmer import IStemmer
 from TokenizerSetup import TokenizerSetup
 from Hash import Hash
+from TokenizerParameters import TokenizerParameters
 
 class FeatureVectorType:
     ForTranslationMemory = 0
@@ -135,7 +136,7 @@ class LanguageTools:
         tokenizer_setup.break_on_whitespace = CultureInfoExtensions.use_blank_as_word_separator(tokenizer_setup.culture_name)
         tokenizer_setup.builtin_recognizers = self.recognizers
         tokenizer_setup.tokenizer_flags = self.tokenizer_flags
-        parameters = TokenizerParameters(tokenizer_setup)
+        parameters = TokenizerParameters(tokenizer_setup, self.resources)
         self.tokenizer = Tokenizer(parameters)
         return self.tokenizer
 
@@ -164,8 +165,8 @@ class LanguageTools:
             feature_ranges.append(item)
         return result, feature_ranges
 
-    def compute_char_feature_vector4(self, s:str, n:int, unique:bool, feature_position_association:List[(int, int)]) -> Tuple[List[int], List[(int, int)]]:
-        list = List[int]
+    def compute_char_feature_vector4(self, s:str, n:int, unique:bool, feature_position_association):
+        list = []
         flag = False
         if feature_position_association is not None:
             feature_position_association.clear()
@@ -191,7 +192,7 @@ class LanguageTools:
 
     def compute_token_feature_vector(self, segment:Segment, include_frequent:bool, unique:bool, feature_to_range_mapping:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
         flag = feature_to_range_mapping is not None and unique == False
-        list = List[int]()
+        list = List[int]
         if flag and len(feature_to_range_mapping) > 0:
             feature_to_range_mapping.clear()
         for token in segment.tokens:

@@ -16,7 +16,7 @@ class SortCriterium:
 
 class SortSpecification:
     def __init__(self, sort_spec:str = None):
-        self.criteria = List[SortCriterium]()
+        self.criteria = []
 
         if not sort_spec or len(sort_spec) == 0:
             return

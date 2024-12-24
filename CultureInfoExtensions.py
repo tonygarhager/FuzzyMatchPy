@@ -903,6 +903,18 @@ class CultureInfoExtensions:
         return ret
 
     @staticmethod
+    def get_region_qualified_culture(name):
+        return name#mod
+
+    @staticmethod
+    def use_clitics(culture_name:str)->bool:
+        twoletter = StringUtils.get_iso_language_code(culture_name)
+        return twoletter.lower() == 'en' or CultureInfoExtensions.is_romanic_language(culture_name)
+    @staticmethod
+    def is_romanic_language(culture_name:str)->bool:
+        return culture_name in CultureInfoExtensions.romance_languages
+
+    @staticmethod
     def use_blank_as_word_separator(culture_name:str) -> bool:
         return not StringUtils.get_iso_language_code(culture_name) in CultureInfoExtensions.use_blank_as_word_separator_exceptions
 

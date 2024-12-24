@@ -30,7 +30,7 @@ class EditDistance:
         self.source_object_count = source_object_count
         self.target_object_count = target_object_count
         self.distance = distance
-        self.items = List[EditDistanceItem]()
+        self.items = List[EditDistanceItem]
 
     def __getitem__(self, item):
         return self.items[item]
@@ -97,7 +97,7 @@ class EditDistance:
     def add_at_start(self, item:EditDistanceItem):
         self.items.insert(0, item)
 
-        
+
 
 
 

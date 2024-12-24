@@ -2,11 +2,14 @@ import sqlite3
 import datetime
 from StringUtils import StringUtils
 from BooleanSettingsWrapper import BooleanSettingsWrapper
-from TranslationMemory import TranslationMemory
+from TranslationMemory import *
 from Resource import Resource
 from DefaultFallbackRecognizer import DefaultFallbackRecognizer
 from typing import List
 from SearchSettings import *
+from SearchResults import *
+from LanguageResources import *
+from AnnotatedTranslationMemory import AnnotatedTranslationMemory
 
 class FileBasedTranslationMemory:
     def __init__(self, tmPath):
@@ -98,11 +101,12 @@ class FileBasedTranslationMemory:
 
     #CallContext::GetAnnotatedTranslationMemory
     #AnnotatedTmManager::GetAnnotatedTranslationMemory
-    def get_annotated_translation_memory(self, _id):
-        annotated_tm = {}
-        annotated_tm['resources_write_count'] = self.get_resources_write_count()
-        annotated_tm['language_resources'] = self.get_language_resources(_id, True)
-        annotated_tm['tm'] = self.get_translation_memory(_id)
+    def get_annotated_translation_memory(self, _id) -> AnnotatedTranslationMemory:
+        tm = {}
+        tm['resources_write_count'] = self.get_resources_write_count()
+        tm['language_resources'] = self.get_language_resources(_id, True)
+        tm['tm'] = self.get_translation_memory(_id)
+        annotated_tm = AnnotatedTranslationMemory(tm['language_resources'], tm['resources_write_count'], tm['tm'])
         return annotated_tm
 
     def _get_cm_colspec(self):
@@ -219,7 +223,7 @@ class FileBasedTranslationMemory:
             booleanSettingsWrapper = BooleanSettingsWrapper(row[7])
             expirationDate = None
             if row[10] is not None:
-                expirationDate = datetime.datetime.strptime(row[10], '%Y-%m-%d %H:%M:%S')
+                expirationDate = datetime.strptime(row[10], '%Y-%m-%d %H:%M:%S')
             desc = None
             if row[5] is not None:
                 desc = str(row[5])
@@ -231,7 +235,7 @@ class FileBasedTranslationMemory:
                 str(row[4]),
                 booleanSettingsWrapper.builtinRecognizer,
                 str(row[8]),
-                datetime.datetime.strptime(row[9], '%Y-%m-%d %H:%M:%S'),
+                datetime.strptime(row[9], '%Y-%m-%d %H:%M:%S'),
                 desc,
                 str(row[6]),
                 expirationDate,
@@ -241,7 +245,7 @@ class FileBasedTranslationMemory:
 
             translationMemory.last_recompute_date = None
             if row[12] is not None:
-                translationMemory.last_recompute_date = datetime.datetime.strptime(row[12], '%Y-%m-%d %H:%M:%S')
+                translationMemory.last_recompute_date = datetime.strptime(row[12], '%Y-%m-%d %H:%M:%S')
             translationMemory.last_recompute_size = None
             if row[13] is not None:
                 translationMemory.last_recompute_size = int(row[13])
@@ -263,7 +267,8 @@ class FileBasedTranslationMemory:
         lst = self._get_tms()
         self.tm = lst[0]
 
-    def search_translation_unit(self, settings:SearchSettings, tu):
+    def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit):
+        anno_tm = self.get_annotated_translation_memory(self.tm.id)
         is_concordance_search = settings.is_concordance_search()
         flag = settings.mode == SearchMode.TargetConcordanceSearch
 
@@ -272,5 +277,20 @@ class FileBasedTranslationMemory:
 
         if settings.max_results < 1:
             settings.max_results = 1
+
+        search_results = SearchResults(settings.sort_spec)
+
+        if flag:
+            anno_tm.target_tools().ensure_tokenized_segment(tu.trg_segment)
+        else:
+            search_results.source_segment = tu.src_segment
+            allow_token_bundles = is_concordance_search == False and tu.trg_segment is not None
+            anno_tm.source_tools().ensure_tokenized_segment(tu.src_segment, False, allow_token_bundles)
+
+            if tu.trg_segment is not None:
+                anno_tm.target_tools().ensure_tokenized_segment(tu.trg_segment, False, allow_token_bundles)
+
+
+
 
 

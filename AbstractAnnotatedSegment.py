@@ -53,7 +53,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
         return self.concordance_feature_vector
 
     def compute_word_item_vector(self) -> List[FeatureToRangeMapping]:
-        source = List[SegmentRange]()
+        source = []
         features, source = self.compute_feature_vector(FeatureVectorType.ForTranslationMemory, False, source)
         return [
             FeatureToRangeMapping(feature, range_value)

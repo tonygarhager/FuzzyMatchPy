@@ -21,5 +21,5 @@ class FileBasedTMHelper:
         org_segment = Segment(tm.tm.languageDirection['srcLang'])
         org_segment.add(query)
         tgt_segment = Segment(tm.tm.languageDirection['trgLang'])
-        tu =TranslationUnit(org_segment, tgt_segment)
+        tu = TranslationUnit(org_segment, tgt_segment)
         return tm.search_translation_unit(FileBasedTMHelper.get_search_setting(False, 5, 70), tu)
