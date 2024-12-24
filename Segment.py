@@ -17,7 +17,18 @@ class Segment:
         return self.elements[len(self.elements) - 1]
 
     def add(self, element):
+        if len(self.elements) > 0 and isinstance(element, Text) and isinstance(self.last_element(), Text):
+            text = Text(self.last_element())
+            text.value += element.value
+            return
         self.elements.append(element)
+
+    def add_text(self, txt:str):
+        if len(self.elements) > 0 and isinstance(self.last_element(), Text):
+            text = Text(self.last_element())
+            text.value += txt
+            return
+        self.elements.append(Text(txt))
 
     @staticmethod
     def _trim_element(t:Text, trailing:bool) -> Tuple[bool, str]:

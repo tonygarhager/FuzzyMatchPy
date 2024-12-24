@@ -19,7 +19,7 @@ class FileBasedTMHelper:
     def fuzzy_search(self, tm_path:str, query:str, max_results:int, min_score:int) -> SearchResults:
         tm = FileBasedTranslationMemory(tm_path)
         org_segment = Segment(tm.tm.languageDirection['srcLang'])
-        org_segment.add(query)
+        org_segment.add_text(query)
         tgt_segment = Segment(tm.tm.languageDirection['trgLang'])
         tu = TranslationUnit(org_segment, tgt_segment)
         return tm.search_translation_unit(FileBasedTMHelper.get_search_setting(False, 5, 70), tu)

@@ -20,35 +20,35 @@ class LanguageTools:
         Token = 1
 
     def __init__(self, resources:LanguageResources, recognizers:int, flags:int=TokenizerFlags.DefaultFlags, use_alternate_stemmers:bool=False, normalize_char_widths:bool=False):
-        self.resources = resources
-        self.recognizers = recognizers
-        self.tokenizer_flags = flags
-        self.use_alternate_stemmers = use_alternate_stemmers
-        self.normalize_char_widths = (normalize_char_widths and StringUtils.use_fullwidth(resources.culture_name))
-        self.tokenizer:Tokenizer = None
+        self._resources = resources
+        self._recognizers = recognizers
+        self._tokenizer_flags = flags
+        self._use_alternate_stemmers = use_alternate_stemmers
+        self._normalize_char_widths = (normalize_char_widths and StringUtils.use_fullwidth(resources.culture_name))
+        self._tokenizer:Tokenizer = None
         self.tokens = []
-        self.stemmer:IStemmer = None
+        self._stemmer:IStemmer = None
 
     def ensure_tokenized_segment(self, segment:Segment, force_retokenization:bool=False, allow_token_bundles:bool=False) -> None:
         if not force_retokenization and segment.tokens is not None:
             return
-        segment.tokens = self.get_tokenizer().tokenize(segment, allow_token_bundles)
+        segment.tokens = self.tokenizer.tokenize(segment, allow_token_bundles)
 
     def stem(self, s:Segment) -> None:
         self.ensure_tokenized_segment(s)
         for token in s.tokens:
             type = token.type
-            if type == TokenType.Word or type == TokenType.CharSequence or (type == TokenType.Acronym and self.use_alternate_stemmers):
+            if type == TokenType.Word or type == TokenType.CharSequence or (type == TokenType.Acronym and self._use_alternate_stemmers):
                 if isinstance(token, SimpleToken) and token.stem is None and not any(char.isdigit() for char in token.text):
                     if token.type == TokenType.CharSequence:
                         token.stem = token.text
                     else:
-                        token.stem = self.get_stemmer().stem(token.text)
-                        if (self.normalize_char_widths):
+                        token.stem = self.stemmer.stem(token.text)
+                        if (self._normalize_char_widths):
                             token.stem = StringUtils.half_width_to_full_width(token.stem)
 
     def is_non_blank_language(self) -> bool:
-        return not CultureInfoExtensions.use_blank_as_word_separator(self.resources.culture_name)
+        return not CultureInfoExtensions.use_blank_as_word_separator(self._resources.culture_name)
 
     def compute_identity_string(self, segment:Segment, mode:int, position_token_association:[SegmentRange]) -> Tuple[str, List[SegmentRange]]:
         flag = TokenizerHelper.tokenizes_to_words(segment.culture_name)
@@ -121,24 +121,26 @@ class LanguageTools:
 
         return sb, position_token_association
 
-    def get_stemmer(self) -> IStemmer:
-        if self.stemmer is not None:
-            return self.stemmer
+    @property
+    def stemmer(self) -> IStemmer:
+        if self._stemmer is not None:
+            return self._stemmer
         #mod
-        return self.stemmer
+        return self._stemmer
 
-    def get_tokenizer(self) -> Tokenizer:
-        if self.tokenizer is not None:
-            return self.tokenizer
+    @property
+    def tokenizer(self) -> Tokenizer:
+        if self._tokenizer is not None:
+            return self._tokenizer
         tokenizer_setup = TokenizerSetup()
-        tokenizer_setup.culture_name = self.resources.culture_name
+        tokenizer_setup.culture_name = self._resources.culture_name
         tokenizer_setup.create_whitespace_tokens = True
         tokenizer_setup.break_on_whitespace = CultureInfoExtensions.use_blank_as_word_separator(tokenizer_setup.culture_name)
-        tokenizer_setup.builtin_recognizers = self.recognizers
-        tokenizer_setup.tokenizer_flags = self.tokenizer_flags
-        parameters = TokenizerParameters(tokenizer_setup, self.resources)
-        self.tokenizer = Tokenizer(parameters)
-        return self.tokenizer
+        tokenizer_setup.builtin_recognizers = self._recognizers
+        tokenizer_setup.tokenizer_flags = self._tokenizer_flags
+        parameters = TokenizerParameters(tokenizer_setup, self._resources)
+        self._tokenizer = Tokenizer(parameters)
+        return self._tokenizer
 
     def compute_char_feature_vector(self, fvt:int, segment:Segment, n:int, unique:bool, feature_ranges:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
         list:List[(int, int)] = None
@@ -230,16 +232,16 @@ class LanguageTools:
         return list, feature_to_range_mapping
 
     def is_stopword(self, s:str) -> bool:
-        return self.resources.is_stopword(s.lower())
+        return self._resources.is_stopword(s.lower())
 
     def get_stoplist_signature(self) -> str:
-        return self.resources.get_stoplist_signature()
+        return self._resources.get_stoplist_signature()
 
     def get_tokenizer_signature(self) -> str:
-        return self.tokenizer.get_signature()
+        return self._tokenizer.get_signature()
 
     def get_stemmer_signature(self) -> str:
-        return self.stemmer.get_signature()
+        return self._stemmer.get_signature()
 
     def get_abbreviation_signature(self) -> str:
-        return self.resources.get_abbreviation_signature()
+        return self._resources.get_abbreviation_signature()
