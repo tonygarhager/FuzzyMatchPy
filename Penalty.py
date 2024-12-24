@@ -25,4 +25,12 @@ class AppliedPenalty:
         self.malus = malus
         self.filter_name = None
 
-    
+class Penalty:
+    def __init__(self, pt: PenaltyType = PenaltyType.Unknown, malus:int = 0):
+        self.penalty_type = pt
+        self.malus = malus
+
+    @staticmethod
+    def can_apply_multiple_times(pt: PenaltyType):
+        return pt == PenaltyType.TagMismatch
+
