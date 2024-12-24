@@ -1,5 +1,6 @@
 import unicodedata
 import pycountry
+import string
 from typing import List
 from typing import Tuple
 
@@ -71,6 +72,14 @@ class StringUtils:
         if len(char) != 1:
             raise ValueError("Input must be a single character.")
         return char.isspace()
+
+    @staticmethod
+    def is_punctuation(char):
+        return char in string.punctuation
+
+    @staticmethod
+    def is_symbol(char):
+        return not char.isalnum() and not char.isspace()
 
     @staticmethod
     def is_separator(char):
