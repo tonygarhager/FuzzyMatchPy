@@ -43,5 +43,5 @@ class SortSpecification:
 
     def add(self, sc:SortCriterium):
         self.criteria.append(sc)
-        
+
 
