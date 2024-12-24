@@ -918,6 +918,43 @@ class CultureInfoExtensions:
     def use_blank_as_word_separator(culture_name:str) -> bool:
         return not StringUtils.get_iso_language_code(culture_name) in CultureInfoExtensions.use_blank_as_word_separator_exceptions
 
+    @staticmethod
+    def get_clitics(list_str:str, apply_quote_substitution:bool, add_initial_upper_variant:bool):
+        clitics_set = set()
+
+        for text in list_str.split('|'):
+            if text:
+                text2 = text
+                for j in range(2):
+                    clitics_set.add(text2)
+                    if apply_quote_substitution and "'" in text2:
+                        item = text2.replace("'", "’")
+                        clitics_set.add(item)
+                    if not add_initial_upper_variant or not text[0].islower():
+                        break
+                    text2 = text2[0].upper() + text2[1:]
+
+        return clitics_set
+
+    @staticmethod
+    def get_leading_clitics(culture_name):
+        if culture_name is None:
+            raise ValueError("culture cannot be None")
+
+        two_letter_iso_language_name = StringUtils.get_iso_language_code(culture_name)
+
+        if two_letter_iso_language_name:
+            if two_letter_iso_language_name == "fr":
+                return CultureInfoExtensions.get_clitics("d'|l'|c'|j'|n'|qu'|s'|D'|L'|C'|J'|N'|Qu'|S'", True, False)
+            elif two_letter_iso_language_name == "it":
+                return CultureInfoExtensions.get_clitics(
+                    "d'|dall'|dell'|l'|nell'|quest'|sull'|un'|alcun'|al'|all'|s'|D'|Dall'|Dell'|L'|Nell'|Quest'|Sull'|Un'|Alcun'|Al'|All'|S'",
+                    True, False)
+            elif two_letter_iso_language_name == "mt":
+                return CultureInfoExtensions.get_clitics("il-|l-|fil-|tal-|tas-|bir-|fl-|Il-|L-|Fil-|Tal-|Tas-|Bir-|Fl-", False, False)
+
+        return None
+
 if __name__ == "__main__":
     CultureInfoExtensions.__init__()
     ret = CultureInfoExtensions.get_culture_info('en-US')

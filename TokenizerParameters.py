@@ -111,7 +111,7 @@ class TokenizerParameters:
 
     @staticmethod
     def create_currency_recognizer(settings: RecognizerSettings, access: LanguageResources, culture_name: str):
-        return CurrencyFSTRecognizer.create()#mod
+        return CurrencyFSTRecognizer.create(settings, culture_name, 90, access, None)#mod
 
     @staticmethod
     def create_acronym_recognizer(settings: RecognizerSettings, culture_name: str, priority: int):

@@ -1,10 +1,24 @@
 from StringUtils import StringUtils
 from Recognizer import Recognizer
+from CultureInfoExtensions import CultureInfoExtensions
+from Trie import Trie
 
 class DefaultFallbackRecognizer(Recognizer):
     def __init__(self, settings, type, _priority, culture_name:str, _data_accessor):
-        self.priority = _priority
+        super().__init__(settings, type, _priority, None, 'DefaultFallbackRecognizer', False, culture_name)
+
         self.language_resources = _data_accessor
+        self._is_fallback_recognizer = True
+
+        leadingClitics = CultureInfoExtensions.get_leading_clitics(culture_name=culture_name)
+        if not leadingClitics:
+            return
+        num = 0
+        self._leading_clitics = Trie()
+        for text in leadingClitics:
+            self._leading_clitics.insert(text, num)
+            num += 1
+
         self.settings = {}
         self.settings['BreakOnHyphen'] = True
         self.settings['BreakOnDash'] = True
