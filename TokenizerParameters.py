@@ -1,4 +1,4 @@
-from Tokenizer import TokenizerFlags
+from TokenizerFlags import TokenizerFlags
 from Wordlist import Wordlist
 from StringUtils import StringUtils
 from DefaultFallbackRecognizer import DefaultFallbackRecognizer

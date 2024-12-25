@@ -1,3 +1,4 @@
+from Recognizer import Recognizer, IRecognizerTextFilter
 from Segment import Segment
 from Tag import Tag
 from Token import *
@@ -9,18 +10,13 @@ from SimpleToken import SimpleToken
 from NumberToken import NumberToken
 from TokenBundle import TokenBundle
 from DateTimeToken import DateTimeToken
-
-class TokenizerFlags:
-    NoFlags = 0
-    BreakOnHyphen = 1
-    BreakOnDash = 2
-    BreakOnApostrophe = 4
-    AllFlags = 3
-    DefaultFlags = 7
+from typing import List
+from TokenizerParameters import TokenizerParameters
+from TokenizerFlags import TokenizerFlags
 
 class Tokenizer:
     max_acro_length = 6
-    def __init__(self, parameters):
+    def __init__(self, parameters : TokenizerParameters):
         self.parameters = parameters
 
     def tokenize(self, s, allow_token_bundles):
@@ -42,7 +38,8 @@ class Tokenizer:
                 segment_element.culture_name = self.parameters.culture_name
                 list.append(segment_element)
             elif isinstance(segment_element, Text):
-                list2 = self.tokenize_internal(segment_element.value, num, self.parameters.create_whitespace_tokens, allow_token_bundles, self.get_filtered_recognizers(segment_element.value))
+                list2 = self.tokenize_internal(segment_element.value, num, self.parameters.create_whitespace_tokens,
+                                               allow_token_bundles, self.get_filtered_recognizers(segment_element.value))
 
                 if enhanced_asian:
                     list2 = self.get_advanced_tokens(list2)
@@ -51,6 +48,15 @@ class Tokenizer:
 
         self.reclassify_acronyms(list, enhanced_asian)
         self.adjust_number_range_tokenization(list)
+        return list
+
+    def get_filtered_recognizers(self, s:str) -> List[Recognizer]:
+        list = []
+        for i in range(self.parameters.count()):
+            recognizer = self.parameters[i]
+
+            if not isinstance(recognizer, IRecognizerTextFilter) or recognizer.exclude_text(s) == False:
+                list.append(recognizer)
         return list
 
     @staticmethod
@@ -133,7 +139,8 @@ class Tokenizer:
             token2 = None
             for j in range(len(recognizers)):
                 recognizer2 = recognizers[j]
-                token3, num4 = recognizer2.recognize(s, num2, allow_token_bundles)
+                num4 = 0
+                token3, num4 = recognizer2.recognize(s, num2, allow_token_bundles, num4)
 
                 if token3 is not None and (not flag or not isinstance(token3, NumberToken) or num2 + num4 >= length or StringUtils.is_latin_letter(s[num2 + num4])):
                     if not recognizer or (num3 < num4 and (not recognizer.override_fallback_recognizer or not recognizer.is_fallback_recognizer)):

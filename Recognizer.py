@@ -2,12 +2,18 @@ from CharacterSet import *
 from typing import Callable
 from Token import Token, TokenType
 from StringUtils import *
+from abc import *
 
 class RecognizerSettings:
     def __init__(self):
         self.break_on_hyphens: bool = False
         self.break_on_dash: bool = False
         self.break_on_apostrophe: bool = False
+
+class IRecognizerTextFilter(ABC):
+    @abstractmethod
+    def exclude_text(self, s:str)->bool:
+        pass
 
 class Recognizer:
     def __init__(self, settings:RecognizerSettings, t:TokenType, priority:int,

@@ -1,6 +1,6 @@
 
 import re
-from Recognizer import Recognizer
+from Recognizer import *
 from typing import List
 from Token import *
 from SimpleToken import *
@@ -29,7 +29,7 @@ class RegexRecognizerPattern:
             return None
         return self.regex.pattern
 
-class RegexRecognizer(Recognizer):
+class RegexRecognizer(Recognizer, IRecognizerTextFilter):
     TOKEN_MAX_SIZE = 2000
 
     def __init__(self, settings, t, priority, token_class_name, recognizer_name, auto_substitutable, culture):
@@ -82,16 +82,19 @@ class RegexRecognizer(Recognizer):
         consumed_length = max_length
         return token, consumed_length
 
+    def exclude_text(self, s:str) ->bool:
+        return s is not None and len(s) > 2000
+
 class EmailRecognizer(RegexRecognizer):
     def __init__(self, settings, priority, culture):
         super().__init__(settings, TokenType.OtherTextPlaceable, priority, "EMAIL", "DEFAULT_URI_REGOCNIZER", True, culture)
         email_pattern = r"(mailto:)?(?!\\.)[^\\s@\\\\\\(\\);:<>\\[\\],\\\"]+@((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.(((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.)*((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}]){2,}"
         self.add(email_pattern, None, True)
 
-    def exclude_text(self, s):
-        if s.find('@') == -1:
+    def exclude_text(self, s:str)->bool:
+        if super().exclude_text(s):
             return True
-        return False
+        return s.find('@') == -1
 
     def recognize(self, s, from_index, allow_token_bundles, consumed_length):
         token = super().recognize(s, from_index, allow_token_bundles, consumed_length)
