@@ -1,7 +1,11 @@
+from typing import Tuple
+
 from StringUtils import StringUtils
-from Recognizer import Recognizer
+from Recognizer import *
 from CultureInfoExtensions import CultureInfoExtensions
+from Token import Token
 from Trie import Trie
+from SimpleToken import SimpleToken
 
 class DefaultFallbackRecognizer(Recognizer):
     def __init__(self, settings, type, _priority, culture_name:str, _data_accessor):
@@ -19,28 +23,28 @@ class DefaultFallbackRecognizer(Recognizer):
             self._leading_clitics.insert(text, num)
             num += 1
 
-        self.settings = {}
-        self.settings['BreakOnHyphen'] = True
-        self.settings['BreakOnDash'] = True
-        self.settings['BreakOnApostrophe'] = False
+        #self.settings = {}
+        #self.settings['BreakOnHyphen'] = True
+        #self.settings['BreakOnDash'] = True
+        #self.settings['BreakOnApostrophe'] = False
 
     @staticmethod
-    def is_hard_token_terminator(c, settings):
+    def is_hard_token_terminator(c, settings:RecognizerSettings):
         unicode_category = StringUtils.get_unicode_category(c)
 
         if unicode_category in ['Zs', 'Zl', 'Zp', 'Pi', 'Pf']:
             return True
 
-        if unicode_category == 'Po' and settings['BreakOnApostrophe'] and StringUtils.is_apostrophe(c):
+        if unicode_category == 'Po' and settings.break_on_apostrophe and StringUtils.is_apostrophe(c):
             return True
         elif unicode_category == 'Pi' or unicode_category == 'Pf':
             return True
 
         return (c == '/' or c == '\\' or StringUtils.is_colon(c) or
                 StringUtils.is_semicolon(c) or
-                (StringUtils.is_hyphen(c) and settings['BreakOnHyphen']) or
-                (StringUtils.is_dash(c) and settings['BreakOnDash']) or
-                (StringUtils.is_apostrophe(c) and settings['BreakOnApostrophe']))
+                (StringUtils.is_hyphen(c) and settings.break_on_hyphens) or
+                (StringUtils.is_dash(c) and settings.break_on_dash) or
+                (StringUtils.is_apostrophe(c) and settings.break_on_apostrophe))
 
     @staticmethod
     def is_separable_punct(c):
@@ -52,37 +56,37 @@ class DefaultFallbackRecognizer(Recognizer):
                 unicode_category == 'Sm' or  # Math Symbol
                 (unicode_category == 'Po' and c != '.'))  # Other Punctuation (except dot)
 
-    def recognize(self, s, fro, allow_token_bundles):
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
         consumed_length = 0
 
         if not s:
             return None, consumed_length
 
         length = len(s)
-        num = fro
+        num = from_idx
 
         while num < length and (StringUtils.is_white_space(s[num]) or StringUtils.is_separator(s[num])):
             num += 1
 
-        token = {}
-        if num > fro:
-            consumed_length = num - fro
-            token['string'] = s[fro:fro+consumed_length]
-            token['type'] = 'Whitespace'
+        if num > from_idx:
+            consumed_length = num - from_idx
+            token = SimpleToken(s[from_idx:from_idx + consumed_length], TokenType.Whitespace)
+            token.culture_name = self.culture_name
             return token, consumed_length
 
-        if DefaultFallbackRecognizer.is_hard_token_terminator(s[num], self.settings):
+        if DefaultFallbackRecognizer.is_hard_token_terminator(s[num], self._settings):
             consumed_length = 1
-            token['string'] = s[fro:fro+consumed_length]
-            token['type'] = 'GeneralPunctuation'
+            token = SimpleToken(s[from_idx:from_idx + consumed_length], TokenType.GeneralPunctuation)
+            token.culture_name = self.culture_name
             return token, consumed_length
 
+        #mod if (this._leadingClitics != null) line:97
         c = s[num]
         flag = StringUtils.is_cjk_char(c)
-        while num < length and \
-            not StringUtils.is_white_space(c) and \
-            not StringUtils.is_separator(c) and \
-            not DefaultFallbackRecognizer.is_hard_token_terminator(s[num], self.settings):
+        while (num < length and
+               not StringUtils.is_white_space(c) and
+               not StringUtils.is_separator(c) and
+               not DefaultFallbackRecognizer.is_hard_token_terminator(s[num], self._settings)):
             flag2 = StringUtils.is_cjk_char(c)
 
             if flag != flag2:
@@ -93,15 +97,15 @@ class DefaultFallbackRecognizer(Recognizer):
                 flag = flag2
 
         num3 = num
-        num = fro
+        num = from_idx
 
         while num < num3 and (DefaultFallbackRecognizer.is_separable_punct(s[num]) or s[num] == '.'):
             num += 1
 
-        if num > fro:
-            consumed_length = num - fro
-            token['string'] = s[fro:fro+consumed_length]
-            token['type'] = 'GeneralPunctuation'
+        if num > from_idx:
+            consumed_length = num - from_idx
+            token = SimpleToken(s[from_idx:from_idx + consumed_length], TokenType.GeneralPunctuation)
+            token.culture_name = self.culture_name
             return token, consumed_length
 
         flag3 = False
@@ -120,20 +124,20 @@ class DefaultFallbackRecognizer(Recognizer):
                 num3 -= num4
                 flag4 = True
             elif num4 == 1:
-                if not self.language_resources or not self.language_resources.is_abbreviation(s[fro:num3]):
+                if not self.language_resources or not self.language_resources.is_abbreviation(s[from_idx:num3]):
                     num3 -= 1
                     flag4 = True
                 else:
                     flag3 = True
 
-        consumed_length = num3 - fro
-        token['string'] = s[fro:fro+consumed_length]
-        if flag3:
-            token['type'] = 'Abbreviation'
-        else:
-            token['type'] = 'Word'
+        consumed_length = num3 - from_idx
 
-        token['isstopword'] = self.language_resources.is_stopword(token['string'].lower())
+        tt = TokenType.Word
+        if flag3:
+            tt = TokenType.Abbreviation
+        token = SimpleToken(s[from_idx:from_idx + consumed_length], tt)
+        token.is_stopword = self.language_resources.is_stopword(token.text.lower())
+        token.culture_name = self.culture_name
         return token, consumed_length
 
 

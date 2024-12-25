@@ -24,3 +24,6 @@ class NumberFSTRecognizer(Recognizer):
         result.additional_terminators.add('-')
         result.override_fallback_recognizer = True
         return result
+
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        return None, consumed_length#mod

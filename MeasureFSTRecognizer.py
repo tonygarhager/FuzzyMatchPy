@@ -17,6 +17,9 @@ class MeasureFSTRecognizer(Recognizer):
         result.override_fallback_recognizer = True
         return result
 
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        return None, consumed_length#mod
+
 class CurrencyFSTRecognizer(Recognizer):
     def __init__(self, settings, priority, fst_recog, fst_ex, number_fst_ex, culture_name):
         super().__init__(settings, TokenType.Measurement, priority, 'Currency', 'CurrencyFSTRecognizer', False, culture_name)
@@ -36,3 +39,6 @@ class CurrencyFSTRecognizer(Recognizer):
         result.only_if_followed_by_nonword_character = True
         result.override_fallback_recognizer = True
         return result
+
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        return None, consumed_length#mod

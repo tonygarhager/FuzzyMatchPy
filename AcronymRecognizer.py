@@ -11,3 +11,6 @@ class AcronymRecognizer(Recognizer):
         twoletter = StringUtils.get_iso_language_code(self.culture_name)
         if twoletter is not None and twoletter == 'ko':
             self.override_fallback_recognizer = True
+
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        return None, consumed_length#mod

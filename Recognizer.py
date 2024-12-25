@@ -15,7 +15,7 @@ class IRecognizerTextFilter(ABC):
     def exclude_text(self, s:str)->bool:
         pass
 
-class Recognizer:
+class Recognizer(ABC):
     def __init__(self, settings:RecognizerSettings, t:TokenType, priority:int,
                  token_class_name:str, recognizer_name:str, auto_substitutable:bool, culture_name:str):
         self._override_fallback_recognizer = False
@@ -73,6 +73,10 @@ class Recognizer:
                 StringUtils.is_separator(c) or
                 StringUtils.is_symbol(c) or
                 (break_on_cjk and StringUtils.is_cjk_char(c)))
+
+    @abstractmethod
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        pass
 
 
 

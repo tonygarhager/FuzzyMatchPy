@@ -54,7 +54,7 @@ class RegexRecognizer(Recognizer, IRecognizerTextFilter):
         token.culture_name = self.culture_name
         return token
 
-    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int):
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
         token = None
         max_length = 0
         max_priority = 0
