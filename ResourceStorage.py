@@ -32,7 +32,7 @@ class ResourceStorage:
             return "SegmentationRules.xml"
         elif t == LanguageResourceType.TokenizerSettings:
             return "TokenizerSettings.xml"
-        elif t == LanguageResourceType.SegmentationRules:
+        elif t == LanguageResourceType.StemmingRules:
             return "StemmingRules.txt"
         elif t == LanguageResourceType.Stopwords:
             return "Stopwords.txt"

@@ -1,6 +1,11 @@
 import re
 import io
 
+import unicodedata
+
+from StringUtils import StringUtils
+
+
 class SearchOption:
     none = 0
     case_insensitive = 1
@@ -85,7 +90,8 @@ class Wordlist:
         dictionary = {}
         flag = True
         for text in reader:
-            text = text.decode('utf-8').strip()
+            text = StringUtils.remove_invisible_characters(text.decode('utf-8').strip())
+
             if flag and text.startswith('%version='):
                 self.version = int(text[9:])
             flag = False
@@ -141,3 +147,8 @@ class Wordlist:
         memory_stream.write(data)
         memory_stream.seek(0)
         self.load_internal(memory_stream, ignore_comments)
+
+    @property
+    def items(self):
+        return self.words
+

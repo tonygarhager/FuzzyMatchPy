@@ -1,6 +1,7 @@
 import unicodedata
 import pycountry
 import string
+import re
 from typing import List
 from typing import Tuple
 
@@ -231,6 +232,11 @@ class StringUtils:
         trimmed_suffix = s[length - suffix_length:]
         return s[:length - suffix_length], trimmed_suffix
 
+    @staticmethod
+    def remove_invisible_characters(text):
+        # Match control characters, zero-width spaces, etc.
+        invisible_chars = re.compile(r'[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]')
+        return invisible_chars.sub('', text)
 
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True
