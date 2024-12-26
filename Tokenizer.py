@@ -1,6 +1,7 @@
 from Recognizer import Recognizer, IRecognizerTextFilter
 from Segment import Segment
 from Tag import Tag
+from TagToken import TagToken
 from Token import *
 from SegmentRange import SegmentRange, SegmentPosition
 from CultureInfoExtensions import CultureInfoExtensions
@@ -34,7 +35,10 @@ class Tokenizer:
                 continue
 
             if isinstance(segment_element, Tag):
-                pass#mod
+                tag_token = TagToken(segment_element)
+                tag_token.span = SegmentRange.create_3i(num, 0, 0)
+                tag_token.culture_name = self.parameters.culture_name
+                list.append(tag_token)
             elif isinstance(segment_element, Token):
                 segment_element.span = SegmentRange.create_3i(num, 0, 0)
                 segment_element.culture_name = self.parameters.culture_name

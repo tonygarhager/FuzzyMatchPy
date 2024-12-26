@@ -61,10 +61,10 @@ class TokenBundle(Token):
         return self.alternatives[0].token.type
 
     def is_placeable(self):
-        return any(x.token.is_placeable() for x in self.alternatives)
+        return any(x.token.is_placeable for x in self.alternatives)
 
     def is_substitutable(self):
-        return any(x.token.is_substitutable() for x in self.alternatives)
+        return any(x.token.is_substitutable for x in self.alternatives)
 
     def get_similarity(self, other):
         if not isinstance(other, Token):

@@ -1,6 +1,8 @@
 from Text import Text
 from typing import Tuple
 from StringUtils import StringUtils
+from TokenBundle import TokenBundle
+
 
 class Segment:
     def __init__(self, culture_name:str = 'InvariantCulture'):
@@ -72,3 +74,8 @@ class Segment:
                 if flag:
                     del self.elements[len(self.elements) - 1]
         return text
+
+    def has_token_bundles(self):
+        if self.tokens is not None:
+            return any(isinstance(x, TokenBundle) for x in self.tokens)
+        return False
