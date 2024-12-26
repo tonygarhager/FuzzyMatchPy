@@ -113,7 +113,7 @@ class LanguageTools:
                         if flag3:
                             position_token_association.append(token.span)
                         else:
-                            position_token_association.append(SegmentRange.create_3i(token.span.fro['index'], token.span.fro['position'] + i, token.span.fro['position'] + i))
+                            position_token_association.append(SegmentRange.create_3i(token.span.fro.index, token.span.fro.position + i, token.span.fro.position + i))
                 if flag:
                     sb += '|'
                     if flag2:
@@ -213,8 +213,8 @@ class LanguageTools:
                     if num3 != 0 and (unique == False or num3 not in list):
                         list.append(num3)
                         if flag:
-                            num4 = token.span.fro['position'] + num2
-                            feature_to_range_mapping.append(SegmentRange.create_3i(token.span.fro['index'], num4, num4))
+                            num4 = token.span.fro.position_in_run + num2
+                            feature_to_range_mapping.append(SegmentRange.create_3i(token.span.fro.index, num4, num4))
                         num2 += 1
             elif token.type == TokenType.GeneralPunctuation or token.type == TokenType.OpeningPunctuation or token.type == TokenType.ClosingPunctuation or token.type == TokenType.Whitespace or token.type == TokenType.Tag:
                 continue

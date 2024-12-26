@@ -2,7 +2,7 @@ from Recognizer import Recognizer, IRecognizerTextFilter
 from Segment import Segment
 from Tag import Tag
 from Token import *
-from SegmentRange import SegmentRange
+from SegmentRange import SegmentRange, SegmentPosition
 from CultureInfoExtensions import CultureInfoExtensions
 from Text import Text
 from StringUtils import StringUtils
@@ -11,6 +11,8 @@ from NumberToken import NumberToken
 from TokenBundle import TokenBundle
 from DateTimeToken import DateTimeToken
 from typing import List
+
+from TokenizerHelper import TokenizerHelper
 from TokenizerParameters import TokenizerParameters
 from TokenizerFlags import TokenizerFlags
 
@@ -43,12 +45,55 @@ class Tokenizer:
 
                 if enhanced_asian:
                     list2 = self.get_advanced_tokens(list2)
-                if not list2 and len(list2) > 0:
+                if list2 is not None and len(list2) > 0:
                     list.extend(list2)
 
         self.reclassify_acronyms(list, enhanced_asian)
         self.adjust_number_range_tokenization(list)
         return list
+
+    def adjust_number_range_tokenization(self, tokens: List[Token]) -> None:
+        if tokens is None:
+            return
+
+        start_index = 0
+        types_to_find = {TokenType.Number, TokenType.Measurement}
+        num = next((i for i, t in enumerate(tokens[start_index:]) if t.type in types_to_find), None)
+
+        while num is not None and num < len(tokens) - 1:
+            token = tokens[num]
+            if not Tokenizer.is_negative(token):
+                token2 = tokens[num + 1]
+                if Tokenizer.is_negative(token2) and Tokenizer.forms_number_range(token, token2):
+                    index = token.span.fro.index
+                    if (token.span.into.index == index and
+                            token2.span.fro.index == index and
+                            token2.span.into.index == index):
+
+                        token_text = Tokenizer.get_token_text(token2)
+                        if len(token_text) >= 2 and not token_text[0].isdigit() and token_text[1].isdigit():
+                            simple_token = SimpleToken(token_text[0], TokenType.GeneralPunctuation)
+                            simple_token.culture_name = self.parameters.culture_name
+                            simple_token.span = SegmentRange(
+                                SegmentPosition(index, token2.span.fro.position),
+                                SegmentPosition(index, token2.span.fro.position)
+                            )
+
+                            token3 = Tokenizer.make_positive(token2)
+                            token3.culture_name = self.parameters.culture_name
+                            token2.span.fro.position += 1
+                            Tokenizer.set_span(token3, token2.span)
+
+                            tokens[num + 1] = token3
+                            tokens.insert(num + 1, simple_token)
+
+            start_index = num + 1
+            num = next((i for i, t in enumerate(tokens[start_index:], start=start_index) if t.type in types_to_find),
+                       None)
+
+    def get_advanced_tokens(self, tokens: List[Token]) -> List[Token]:
+        tokenizer_helper = TokenizerHelper()
+        return tokenizer_helper.tokenize_icu(tokens, self.parameters.culture_name, self.parameters.advanced_tokenization_stopword_list)
 
     def get_filtered_recognizers(self, s:str) -> List[Recognizer]:
         list = []
@@ -169,7 +214,7 @@ class Tokenizer:
             token2.span = SegmentRange.create_3i(current_run, num2, i - 1)
             list.append(token2)
 
-            if self.parameters.has_variable_recognizer():
+            if self.parameters.has_variable_recognizer:
                 list, _ = self.apply_variable_recognizer(s, token2, list, num)
 
         return list
@@ -190,8 +235,8 @@ class Tokenizer:
         num = start_chain_token_position
         i = len(result) - num
         while i > 0:
-            pos1 = result[num].span.fro['position']
-            pos2 = winning_token.span.into['position']
+            pos1 = result[num].span.fro.position_in_run
+            pos2 = winning_token.span.into.position_in_run
             text = s[pos1:pos2 + 1]
             item = text
             if StringUtils.use_fullwidth(self.parameters.culture_name):

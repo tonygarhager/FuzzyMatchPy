@@ -281,14 +281,14 @@ class FileBasedTranslationMemory:
         search_results = SearchResults(settings.sort_spec)
 
         if flag:
-            anno_tm.target_tools().ensure_tokenized_segment(tu.trg_segment)
+            anno_tm.target_tools.ensure_tokenized_segment(tu.trg_segment)
         else:
             search_results.source_segment = tu.src_segment
             allow_token_bundles = is_concordance_search == False and tu.trg_segment is not None
-            anno_tm.source_tools().ensure_tokenized_segment(tu.src_segment, False, allow_token_bundles)
+            anno_tm.source_tools.ensure_tokenized_segment(tu.src_segment, False, allow_token_bundles)
 
             if tu.trg_segment is not None:
-                anno_tm.target_tools().ensure_tokenized_segment(tu.trg_segment, False, allow_token_bundles)
+                anno_tm.target_tools.ensure_tokenized_segment(tu.trg_segment, False, allow_token_bundles)
 
 
 

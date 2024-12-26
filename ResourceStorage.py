@@ -101,7 +101,7 @@ class ResourceStorage:
 
         flag = False
 
-        while text is None and culture_name != 'InvariantCulture':
+        while text is None and CultureInfoExtensions.get_lcid_from_culture_name(culture_name) != 127:
             if CultureInfoExtensions.get_lcid_from_culture_name(CultureInfoExtensions.get_parent_culture(culture_name)) == 127 and not flag:
                 language_group_name = CultureInfoExtensions.get_language_group_name(culture_name)
 

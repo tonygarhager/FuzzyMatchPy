@@ -238,6 +238,10 @@ class StringUtils:
         invisible_chars = re.compile(r'[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]')
         return invisible_chars.sub('', text)
 
+    @staticmethod
+    def is_ja_long_vowel_marker(c:str) -> bool:
+        return c == 'ー' or c == 'ｰ'
+
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True
     print(StringUtils.is_latin_letter('ａ'))  # True

@@ -2,7 +2,7 @@ from Token import *
 from SegmentElement import SegmentElement
 
 class SimpleToken(Token):
-    def __init__(self, text:str, t:TokenType):
+    def __init__(self, text:str = '', t:TokenType = TokenType.Unknown):
         self.text = text
         self.type = t
         self.is_stopword = False

@@ -176,6 +176,7 @@ class TokenizerParameters:
     def count(self):
         return len(self.recognizers)
 
+    @property
     def has_variable_recognizer(self):
         return self.variables is not None and len(self.variables) > 0
 

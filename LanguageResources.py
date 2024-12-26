@@ -4,9 +4,9 @@ from Wordlist import Wordlist
 from StemmingRuleSet import *
 
 class LanguageResources:
-    def __init__(self, _culture_name):
+    def __init__(self, _culture_name, accessor):
         self.culture_name = _culture_name
-        self.accessor = ResourceStorage()
+        self.accessor = accessor
         self._abbreviations_status:ResourceStatus = self.accessor.get_resource_status(self.culture_name, LanguageResourceType.Abbreviations, True)
         self._stopwords_status:ResourceStatus = self.accessor.get_resource_status(self.culture_name, LanguageResourceType.Stopwords, True)
         self._stemming_rules_status:ResourceStatus = self.accessor.get_resource_status(self.culture_name, LanguageResourceType.StemmingRules, True)
