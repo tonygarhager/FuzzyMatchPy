@@ -10,6 +10,7 @@ class AnnotatedTranslationMemory:
         self._source_tools: LanguageTools = None
         self._target_tools: LanguageTools = None
         self.accessor = ResourceStorage()
+        self._strict_identity_string:str = None
 
     @property
     def source_tools(self) -> LanguageTools:
@@ -26,3 +27,4 @@ class AnnotatedTranslationMemory:
         resources = LanguageResources(self.tm.languageDirection['trgLang'], self.accessor)
         self._target_tools = LanguageTools(resources, self.tm.recognizers, self.tm.tokenizerFlags, True, True)
         return self._target_tools
+

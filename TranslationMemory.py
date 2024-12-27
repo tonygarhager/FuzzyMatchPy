@@ -31,5 +31,5 @@ class TranslationMemory:
         self.expirationDate = _expirationDate
         self.recognizers = _recognizers
         self.tokenizerFlags = _tokenizerFlags
-        self.wordCountFlags = _wordCountFlags
+        self.word_count_flags = _wordCountFlags
         self.fuzzy_indexes = 0

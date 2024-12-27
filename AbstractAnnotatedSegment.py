@@ -7,50 +7,53 @@ from Segment import Segment
 from LanguageTools import LanguageTools, FeatureVectorType
 from SegmentRange import SegmentRange
 from FeatureToRangeMapping import FeatureToRangeMapping
+from Hash import Hash
 
 class IAnnotatedSegment(ABC):
-    @abstractmethod
-    def get_segment(self) -> Segment:
+    @property
+    def segment(self) -> Segment:
         pass
-    @abstractmethod
-    def get_hash(self) -> int:
+    @property
+    def hash(self) -> int:
         pass
 
 class AbstractAnnotatedSegment(IAnnotatedSegment):
     def __init__(self, s: Segment, keep_tokens:bool, keep_peripheral_whitespace:bool):
-        self.identity_string:str = None
-        self.strict_identity_string:str = None
+        self._identity_string:str = None
+        self._strict_identity_string:str = None
         if keep_peripheral_whitespace == False:
             self.trimmed_prefix = s.trim_start()
             self.trimmed_suffix = s.trim_end()
-            self.tm_feature_vector:List[int] = None
-            self.concordance_feature_vector:List[int] = None
             if not self.trimmed_prefix:
                 pass#mod
         if keep_tokens == False:
             s.tokens = None
-        self.segment = s
+        self._segment = s
+        self._tm_feature_vector: List[int] = None
+        self._concordance_feature_vector: List[int] = None
 
-    @abstractmethod
-    def get_lingua_language_tool(self) -> LanguageTools:
+    @property
+    def lingua_language_tool(self) -> LanguageTools:
         pass
 
-    def get_segment(self) -> Segment:
-        return self.segment
+    @property
+    def segment(self) -> Segment:
+        return self._segment
 
-    def get_tm_feature_vector(self) -> List[int]:
-        if self.tm_feature_vector is not None:
-            return self.tm_feature_vector
-        list:List[SegmentRange] = None
-        self.tm_feature_vector, list = self.compute_feature_vector(FeatureVectorType.ForTranslationMemory, True, list)
-        return self.tm_feature_vector
-
-    def get_concordance_feature_vector(self) -> List[int]:
-        if self.concordance_feature_vector is not None:
-            return self.concordance_feature_vector
-        list: List[SegmentRange] = None
-        self.concordance_feature_vector, list = self.compute_feature_vector(FeatureVectorType.ForConcordance, True, list)
-        return self.concordance_feature_vector
+    @property
+    def tm_feature_vector(self) -> List[int]:
+        if self._tm_feature_vector is not None:
+            return self._tm_feature_vector
+        list = None
+        self._tm_feature_vector, list = self.compute_feature_vector(FeatureVectorType.ForTranslationMemory, True, list)
+        return self._tm_feature_vector
+    @property
+    def concordance_feature_vector(self) -> List[int]:
+        if self._concordance_feature_vector is not None:
+            return self._concordance_feature_vector
+        list = None
+        self._concordance_feature_vector, list = self.compute_feature_vector(FeatureVectorType.ForConcordance, True, list)
+        return self._concordance_feature_vector
 
     def compute_word_item_vector(self) -> List[FeatureToRangeMapping]:
         source = []
@@ -64,20 +67,20 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
         return self.compute_feature_vector(FeatureVectorType.ForConcordance, False, feature_to_range_mapping)
 
     def compute_feature_vector(self, type:int, sort_and_unique:bool, feature_to_range_mapping:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
-        list: List[int] = None
-        self.get_lingua_language_tool().stem(self.segment)
+        list = None
+        self.lingua_language_tool.stem(self.segment)
         flag = TokenizerHelper.tokenizes_to_words(self.segment.culture_name)
 
         if type == FeatureVectorType.ForTranslationMemory:
             if flag:
-                list, feature_to_range_mapping = self.get_lingua_language_tool().compute_token_feature_vector(self.segment, True, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tool.compute_token_feature_vector(self.segment, True, sort_and_unique, feature_to_range_mapping)
             else:
-                list, feature_to_range_mapping = self.get_lingua_language_tool().compute_char_feature_vector(type, self.segment, 3, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tool.compute_char_feature_vector(type, self.segment, 3, sort_and_unique, feature_to_range_mapping)
         elif type == FeatureVectorType.ForConcordance:
             if flag:
-                list, feature_to_range_mapping = self.get_lingua_language_tool().compute_char_feature_vector(type, self.segment, 2, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tool.compute_char_feature_vector(type, self.segment, 2, sort_and_unique, feature_to_range_mapping)
             else:
-                list, feature_to_range_mapping = self.get_lingua_language_tool().compute_char_feature_vector(type, self.segment, 1, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tool.compute_char_feature_vector(type, self.segment, 1, sort_and_unique, feature_to_range_mapping)
 
         if sort_and_unique and list is not None:
             list.sort()
@@ -85,20 +88,60 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
             pass
         return list, feature_to_range_mapping
 
-    def get_identity_string(self):
-        if self.identity_string is not None:
-            return self.identity_string
+    @property
+    def identity_string(self):
+        if self._identity_string is not None:
+            return self._identity_string
         list: List[SegmentRange] = None
-        self.identity_string, list = self.get_lingua_language_tool().compute_identity_string(self.segment, LanguageTools.TokenToFeatureMappingMode.Stem, list)
-        return self.identity_string
+        self._identity_string, list = self.lingua_language_tool.compute_identity_string(self.segment, LanguageTools.TokenToFeatureMappingMode.Stem, list)
+        return self._identity_string
 
-    def get_strict_identity_string(self):
-        if self.strict_identity_string is not None:
-            return self.strict_identity_string
-        self.strict_identity_string = self.compute_strict_identity_string(self.segment)
-        return self.strict_identity_string
+    @staticmethod
+    def jenkins_hash(bytes_data):
+        num = 0
+        for b in bytes_data:
+            num += b
+            num += num << 10
+            num ^= num >> 6
+        num += num << 3
+        num ^= num >> 11
+        return num + (num << 15)
 
-    #mod 
+    @staticmethod
+    def fnv1a_32_hash(array, ib_start, cb_size):
+        num = 2166136261  # FNV offset basis for 32-bit hash
+        for i in range(ib_start, cb_size):
+            num ^= array[i]
+            num *= 16777619  # FNV prime for 32-bit hash
+            num &= 0xFFFFFFFF  # Ensure 32-bit unsigned behavior
+        return num
+
+    @staticmethod
+    def get_strict_hash(s):
+        bytes_data = s.encode('utf-16le')  # Encoding.Unicode in C# corresponds to UTF-16 LE
+        num = AbstractAnnotatedSegment.fnv1a_32_hash(bytes_data, 0, len(bytes_data))
+        num2 = AbstractAnnotatedSegment.jenkins_hash(bytes_data)
+        num2 = num2 & 0xFFFFFFFFFFFF0000  # Apply the mask 18446744073709486080UL
+        num3 = num + num2
+        num3 += len(s) & 0xFFFF  # Include string length masked with 65535
+        if num3 != 0 and num3 != -1:
+            return num3
+        return -2
+
+    @property
+    def strict_hash(self):
+        AbstractAnnotatedSegment.get_strict_hash(self._strict_identity_string)
+
+    @property
+    def strict_identity_string(self):
+        if self._strict_identity_string is None:
+            self._strict_identity_string = self.compute_strict_identity_string(self._segment)
+        return self._strict_identity_string
+
+    @property
+    def hash(self):
+        return Hash.get_hash_code_long(self.identity_string)
+
 
 
 

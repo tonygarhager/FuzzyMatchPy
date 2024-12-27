@@ -26,7 +26,8 @@ class ScoringResult:
         self.applied_penalties:List[AppliedPenalty] = None
         self.target_segment_differs:bool = False
 
-    def get_match(self):
+    @property
+    def match(self):
         num = self.base_score
 
         if not self.applied_penalties:

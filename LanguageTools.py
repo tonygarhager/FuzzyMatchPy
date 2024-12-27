@@ -194,12 +194,12 @@ class LanguageTools:
 
     def compute_token_feature_vector(self, segment:Segment, include_frequent:bool, unique:bool, feature_to_range_mapping:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
         flag = feature_to_range_mapping is not None and unique == False
-        list = List[int]
+        list = []
         if flag and len(feature_to_range_mapping) > 0:
             feature_to_range_mapping.clear()
         for token in segment.tokens:
             num = 0
-            if token.type == TokenType.Word or token.type == TokenType.Abbreviation or token.type == TokenType.Acronym or token.type == TokenType.Uri or token.type == TokenType.OtherTextPlaceable:
+            if token.type in (TokenType.Word, TokenType.Abbreviation, TokenType.Acronym, TokenType.Uri, TokenType.OtherTextPlaceable):
                 if isinstance(token, SimpleToken) and (include_frequent or self.is_stopword(token.text) == False):
                     num = Hash.get_hashcode_int(token.stem or token.text.lower())
             elif token.type == TokenType.CharSequence:

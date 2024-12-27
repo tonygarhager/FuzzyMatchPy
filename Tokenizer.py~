@@ -28,7 +28,7 @@ class Tokenizer:
     def create_from_setup(setup:TokenizerSetup, accessor = None):
         param = TokenizerParameters(setup, accessor)
         return Tokenizer(param)
-
+    
     def tokenize(self, s, allow_token_bundles):
         return self.get_tokens(s, allow_token_bundles, True)
 

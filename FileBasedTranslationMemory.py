@@ -1,5 +1,8 @@
 import sqlite3
 import datetime
+
+from AnnotatedSegment import AnnotatedSegment
+from AnnotatedTranslationUnit import AnnotatedTranslationUnit
 from StringUtils import StringUtils
 from BooleanSettingsWrapper import BooleanSettingsWrapper
 from TranslationMemory import *
@@ -10,10 +13,18 @@ from SearchSettings import *
 from SearchResults import *
 from LanguageResources import *
 from AnnotatedTranslationMemory import AnnotatedTranslationMemory
+from WordCounts import *
+from FuzzySearcher import *
+
+class FuzzyIndexes:
+    SourceWordBased = 1
+    SourceCharacterBased = 2
+    TargetCharacterBased = 4
+    TargetWordBased = 8
 
 class FileBasedTranslationMemory:
     def __init__(self, tmPath):
-
+        self.fuzzy_index_caches = [InMemoryFuzzyIndex()] * 10
         self.tm:TranslationMemory = None
         # Set file path
         self.FilePath = tmPath
@@ -181,6 +192,12 @@ class FileBasedTranslationMemory:
         if flag == False:
             raise ('ErrorCode.StorageVersionDataOutdated')
 
+    # SqliteStorage::GetAlignmentDataColspec()
+    def get_alignment_data_colspec(self):
+        if (self._supports_alignment_data() == False):
+            return ", null, null, null "
+        return ", alignment_data, align_model_date, insert_date "
+
     #SqliteStorage::SupportsAlignmentData
     def _supports_alignment_data(self):
         parameter = self._getParameter('AlignmentDataVersion')
@@ -267,8 +284,36 @@ class FileBasedTranslationMemory:
         lst = self._get_tms()
         self.tm = lst[0]
 
+    def get_segment_hash(self, s):
+        pass#mod
+
+    @staticmethod
+    def set_search_parameters_static(settings:SearchSettings):
+        flag = True
+        descending_order = None
+        max_tu_id = None
+        last_change_date = None
+
+        if settings.sort_spec is not None:
+            # Check if all criteria directions are not ascending and field name is not "chd"
+            flag = all(criterion.direction != SortDirection.Ascending or criterion.field_name != "chd" for criterion in
+                       settings.sort_spec.criteria)
+
+        descending_order = flag
+        max_tu_id = float('inf') if descending_order else -1
+
+        # Set the date accordingly
+        last_change_date = datetime.max if descending_order else datetime(1800, 1, 1)
+
+        return max_tu_id, descending_order, last_change_date
+
+    def set_search_parameters(self):
+        return FileBasedTranslationMemory.set_search_parameters_static(self.settings)
+
     def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit):
+        self.settings = settings
         anno_tm = self.get_annotated_translation_memory(self.tm.id)
+        anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
         is_concordance_search = settings.is_concordance_search()
         flag = settings.mode == SearchMode.TargetConcordanceSearch
 
@@ -289,6 +334,152 @@ class FileBasedTranslationMemory:
 
             if tu.trg_segment is not None:
                 anno_tm.target_tools.ensure_tokenized_segment(tu.trg_segment, False, allow_token_bundles)
+                search_results.document_placeable = PlaceableComputer.compute_placeables(tu.src_segment, tu.trg_segment)
+            elif is_concordance_search == False:
+                search_results.document_placeable = PlaceableComputer.compute_placeables(tu.src_segment, None)
+            #mod search_results.source_hash = self.get_segment_hash(tu.src_segment)
+            word_count_options = WordCountsOptions()
+            word_count_options.break_on_tag = (anno_tm.tm.word_count_flags & WordCountFlags.BreakOnTag) == WordCountFlags.BreakOnTag
+            word_count_options.break_on_hyphen = (anno_tm.tm.word_count_flags & WordCountFlags.BreakOnHyphen) == WordCountFlags.BreakOnHyphen
+            word_count_options.break_on_dash = (anno_tm.tm.word_count_flags & WordCountFlags.BreakOnDash) == WordCountFlags.BreakOnDash
+            word_count_options.break_on_apostrophe = (anno_tm.tm.word_count_flags & WordCountFlags.BreakOnApostrophe) == WordCountFlags.BreakOnApostrophe
+            word_count_options.break_advanced_tokens_by_character = settings.advanced_tokenization_legacy_scoring
+            search_results.source_word_counts = WordCounts(tu.src_segment.tokens, word_count_options, tu.src_segment.culture_name)
+
+        last_tu_id, flag2, last_change_date = self.set_search_parameters()
+        num = max(SearchSettings.min_score_lower_bound, self.settings.min_score - 20)
+        num2 = self.settings.max_results
+        if num2 < 20 and self.settings.mode != SearchMode.DuplicateSearch:
+            num2 = 20
+        num3 = max(50, num2)
+
+        #mod unneed because Searcher._exactSearchTestPageSize is always -1
+        list = []
+        num4 = 0
+
+        if (self.settings.mode == SearchMode.ExactSearch or
+            self.settings.mode == SearchMode.NormalSearch or
+            self.settings.mode == SearchMode.FullSearch or
+            self.settings.mode == SearchMode.DuplicateSearch):
+            pass#mod
+        elif self.settings.mode == SearchMode.ConcordanceSearch:
+            last_tu_id = self.run_concordance_search(anno_tu.source, True, num, num2, last_tu_id, search_results, flag2)
+        elif self.settings.mode == SearchMode.TargetConcordanceSearch:
+            last_tu_id = self.run_concordance_search(anno_tu.target, False, num, num2, last_tu_id, search_results, flag2)
+
+        if search_results is None:
+            return None
+
+        search_results.results = [r for r in search_results.results if r.scoring_result.match >= self.settings.min_score]
+
+        # Check if SortSpecification is not None and contains sort criteria
+        if self.settings.sort_spec and len(self.settings.sort_spec) > 0 and len(search_results.results) > 1:
+            # Perform sorting based on SortSpecification
+            search_results.results.sort(key=self._get_sort_key(self.settings.sort_spec))
+        else:
+            # Perform default sorting
+            search_results.results.sort(key=self._get_sort_key(self._DefaultSortOrder))
+
+        # Cap the results at the maximum allowed number
+        if len(search_results.results) > self.settings.max_results:
+            search_results.results = search_results.results[:self.settings.max_results]
+
+        return search_results
+
+    def ensure_fuzzy_index_loaded(self, type:FuzzyIndexes):
+        #if type in self.fuzzy_index_caches.keys():
+        #    return
+        self.fuzzy_index_caches[type]:InMemoryFuzzyIndex = InMemoryFuzzyIndex()
+        sqlcmd = 'SELECT translation_memory_id, translation_unit_id, fi' + str(int(type)) + ' FROM fuzzy_data ORDER BY translation_unit_id ASC'
+        self.cursor.execute(sqlcmd)
+        rows = self.cursor.fetchall()
+        for row in rows:
+            nint = int(row[1])
+            text = None if row[2] is None else str(row[2])
+            list = []
+
+            if text is not None:
+                array = text.split('|')
+                for i in range(len(array)):
+                    item = int(array[i])
+                    list.append(item)
+
+            self.fuzzy_index_caches[type].add(nint, list)
+
+    def fuzzy_search(self, tmid:int, feature:[], index:FuzzyIndexes, min_score:int, max_hits:int, concordance:bool, last_tuid:int,
+                     tu_context_data:TuContextData, descending_order:bool)->[]:
+        self.ensure_fuzzy_index_loaded(index)
+        alignment_data_col_spec = self.get_alignment_data_colspec()
+        scoring_method = ScoringMethod.QUERY if concordance else ScoringMethod.DICE
+        list = self.fuzzy_index_caches[int(index)].search(feature, max_hits, min_score, last_tuid, scoring_method, None, descending_order)
+
+        if list is None or len(list) == 0:
+            return []
+        query = 'SELECT id, guid, translation_memory_id, \r\n\t\t\t\tsource_hash, source_segment, 0, 0, \r\n\t\t\t\ttarget_hash, target_segment, 0, 0, \r\n\t\t\t\tcreation_date, creation_user, change_date, change_user, last_used_date, last_used_user, usage_counter, flags ' + (', source_token_data, target_token_data ' if self.serializesTokens() else ', null, null ') + alignment_data_col_spec + ', 0, null, null FROM translation_units WHERE id IN ('
+        flag = True
+        for hit in list:
+            if flag:
+                flag = False
+            else:
+                query += ','
+            query += str(hit.key)
+        query += ')'
+        tuset = []
+
+
+    def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int, max_tuid:int, results:SearchResults, descending_order:bool)->int:
+        min_value = datetime.min
+        if is_source:
+            fuzzy_indexes = FuzzyIndexes.SourceCharacterBased
+            fuzzy_indexes2 = FuzzyIndexes.SourceWordBased
+        else:
+            fuzzy_indexes = FuzzyIndexes.TargetCharacterBased
+            fuzzy_indexes2 = FuzzyIndexes.TargetWordBased
+
+        if (self.tm.fuzzy_indexes & fuzzy_indexes) == 0 and (self.tm.fuzzy_indexes & fuzzy_indexes2) == 0:
+            raise Exception('ErrorCode.TMSearchModeNotSupported')
+
+        list2 = []
+        list = segment.tm_feature_vector
+        if (self.tm.fuzzy_indexes & fuzzy_indexes2) != 0:
+            if list and len(list) > 0:
+                while True:
+                    list2 = self.fuzzy_search(self.tm.id, list, fuzzy_indexes2,
+                                                               adjusted_minscore, adjusted_maxresults, True, max_tuid,
+                                                               TuContextData(), descending_order)
+                    if list2 and len(list2) > 0:
+                        num = 0
+                        if is_source:
+                            self.AddTUsToResult(segment, None, results, list2, fuzzy_indexes2, None, TuContextData(),
+                                                max_tuid, min_value, descending_order, None, None, None, None, num)
+                        else:
+                            self.AddTUsToResult(None, segment, results, list2, fuzzy_indexes2, None, TuContextData(),
+                                                max_tuid, min_value, descending_order, None, None, None, None, num)
+                    if not (list2 and len(list2) == adjusted_maxresults and results.count() < adjusted_maxresults):
+                        break
+
+        if (self.tm.fuzzy_indexes & fuzzy_indexes) == 0:
+            return
+
+        max_tu_id = 0
+        list = segment.concordance_feature_vector
+        if not list or len(list) <= 0:
+            return
+
+        while True:
+            list2 = self.fuzzy_search(self.tm.id, list, fuzzy_indexes, adjusted_minscore,
+                                                       adjusted_maxresults, False, max_tuid, TuContextData(), False)
+            if list2 and len(list2) > 0:
+                num2 = 0
+                if is_source:
+                    self.AddTUsToResult(segment, None, results, list2, fuzzy_indexes, None, TuContextData(), max_tuid,
+                                        min_value, False, None, None, None, None, num2)
+                else:
+                    self.AddTUsToResult(None, segment, results, list2, fuzzy_indexes, None, TuContextData(), max_tuid,
+                                        min_value, False, None, None, None, None, num2)
+            if not (list2 and len(list2) == adjusted_maxresults and results.count() < adjusted_maxresults):
+                break
+
 
 
 

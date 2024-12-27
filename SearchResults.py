@@ -5,6 +5,7 @@ from typing import Callable
 from ScoringResult import *
 from Placeable import *
 from datetime import datetime
+from TuContext import *
 
 class SearchResult:
     def __init__(self, tm_tu:TranslationUnit):
@@ -72,7 +73,7 @@ class SearchResultFieldValueComparer:
 
         if text is not None:
             if text == 'sco':
-                num = a.scoring_result.get_match() - b.scoring_result.get_match()
+                num = a.scoring_result.match - b.scoring_result.match
                 if num == 0 and a.scoring_result.id_context_match != b.scoring_result.id_context_match:
                     num = -1
                     if a.scoring_result.id_context_match:

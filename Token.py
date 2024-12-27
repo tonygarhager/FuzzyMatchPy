@@ -2,16 +2,13 @@ from SegmentRange import SegmentRange
 from SegmentElement import SegmentElement
 from abc import ABC, abstractmethod
 
-from TokenBundle import TokenBundle
-
-
 class TokenType:
     Unknown = -1
     Word = 0
     Abbreviation = 1
     CharSequence = 2
-    GeneralPunctuation = 3,
-    OpeningPunctuation = 4,
+    GeneralPunctuation = 3
+    OpeningPunctuation = 4
     ClosingPunctuation = 5
     Date = 6
     Time = 7
@@ -85,6 +82,7 @@ class Token(SegmentElement, ABC):
         return False
 
     def get_bundle_similarity(self, other):
+        from TokenBundle import TokenBundle
         if isinstance(other, TokenBundle) == False:
             return SegmentElement.Similarity.Non
         return other.get_similarity(self)

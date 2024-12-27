@@ -4,17 +4,19 @@ from SegmentElement import SegmentElement
 class SimpleToken(Token):
     def __init__(self, text:str = '', t:TokenType = TokenType.Unknown):
         self.text = text
-        self.type = t
+        self._type = t
         self.is_stopword = False
         self.stem = ''
 
+    @property
     def is_placeable(self):
-        return (self.type == TokenType.Acronym or
-                self.type == TokenType.Variable or
-                self.type == TokenType.Uri or
-                self.type == TokenType.AlphaNumeric or
-                self.type == TokenType.OtherTextPlaceable)
+        return (self._type == TokenType.Acronym or
+                self._type == TokenType.Variable or
+                self._type == TokenType.Uri or
+                self._type == TokenType.AlphaNumeric or
+                self._type == TokenType.OtherTextPlaceable)
 
+    @property
     def is_substitutable(self):
         return (self.type == TokenType.Acronym or
                 self.type == TokenType.Variable or
@@ -42,6 +44,12 @@ class SimpleToken(Token):
             if flag == False:
                 return SegmentElement.Similarity.Non
             return SegmentElement.Similarity.IdenticalValueAndType
+
+    def get_token_type(self)->TokenType:
+        return self._type
+
+    def set_token_type(self, type:TokenType):
+        self._type = type
 
 class GenericPlaceableToken(SimpleToken):
     def __init__(self, text:str, token_class:str, is_subtitutable:bool):

@@ -1,3 +1,7 @@
+from CultureInfoExtensions import CultureInfoExtensions
+from TokenizerFlags import TokenizerFlags
+from BuiltinRecognizers import BuiltinRecognizers
+
 
 class TokenizerSetup:
     def __init__(self):
@@ -7,3 +11,14 @@ class TokenizerSetup:
         self.separate_clitics:bool = False
         self.builtin_recognizers:int = 0
         self.tokenizer_flags:int = 0
+
+class TokenizerSetupFactory:
+    @staticmethod
+    def create(culture_name:str, recognizers:BuiltinRecognizers, flags:TokenizerFlags = TokenizerFlags.DefaultFlags):
+        setup = TokenizerSetup()
+        setup.culture_name = culture_name
+        setup.builtin_recognizers = recognizers
+        setup.tokenizer_flags = flags
+        setup.create_whitespace_tokens = False
+        setup.break_on_whitespace = CultureInfoExtensions.use_blank_as_word_separator(culture_name)
+        return setup

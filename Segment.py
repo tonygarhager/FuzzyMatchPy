@@ -2,7 +2,7 @@ from Text import Text
 from typing import Tuple
 from StringUtils import StringUtils
 from TokenBundle import TokenBundle
-
+from Tag import *
 
 class Segment:
     def __init__(self, culture_name:str = 'InvariantCulture'):
@@ -79,3 +79,39 @@ class Segment:
         if self.tokens is not None:
             return any(isinstance(x, TokenBundle) for x in self.tokens)
         return False
+
+    def renumber_tag_anchors(self, next_tag_anchor, max_alignment_anchor):
+        if next_tag_anchor <= 0:
+            raise ValueError("nextTagAnchor must be greater than 0")
+
+        dictionary = {}
+        flag = False
+        num = 0
+
+        for segment_element in self.elements:
+            if isinstance(segment_element, Tag):
+                tag = segment_element
+                if tag.type == TagType.Start or tag.type == TagType.End:
+                    # Handle Start and End tag types
+                    if tag.anchor in dictionary:
+                        previous_anchor = dictionary[tag.anchor]
+                        flag |= (tag.anchor != previous_anchor)
+                        tag.anchor = previous_anchor
+                    else:
+                        dictionary[tag.anchor] = next_tag_anchor
+                        flag |= (tag.anchor != next_tag_anchor)
+                        tag.anchor = next_tag_anchor
+                        next_tag_anchor += 1
+                elif tag.type == TagType.Standalone or tag.type == TagType.TextPlaceholder or tag.type == TagType.LockedContent:
+                    # Handle Standalone, TextPlaceholder, LockedContent
+                    flag |= (tag.anchor != next_tag_anchor)
+                    tag.anchor = next_tag_anchor
+                    next_tag_anchor += 1
+                else:
+                    raise Exception("Unexpected TagType")
+
+                # Update the maximum anchor values
+                num = max(num, tag.anchor)
+                max_alignment_anchor = max(max_alignment_anchor, tag.alignment_anchor)
+
+        return flag, max_alignment_anchor

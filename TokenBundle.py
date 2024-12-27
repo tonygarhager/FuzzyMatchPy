@@ -2,6 +2,7 @@ from rapidfuzz.distance.DamerauLevenshtein import similarity
 
 from Token import *
 from PrioritizedToken import PrioritizedToken
+
 class TokenBundle(Token):
     def __init__(self, t:Token, priority:int):
         self.text = t.text

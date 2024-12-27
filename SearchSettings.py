@@ -18,6 +18,8 @@ class SearchSettings:
         self.max_results = _max_results
         self.min_score = _min_score
         self.sort_spec: SortSpecification = None
+        self.check_matching_sub_languages = False
+        self.advanced_tokenization_legacy_scoring = False
 
     def is_concordance_search(self) -> bool:
         return self.mode == SearchMode.ConcordanceSearch or self.mode == SearchMode.TargetConcordanceSearch
