@@ -18,6 +18,7 @@ from WordCounts import *
 from FuzzySearcher import *
 from StoTranslationUnit import *
 from StoSegment import *
+from sortedcontainers import SortedDict
 
 class FuzzyIndexes:
     SourceWordBased = 1
@@ -583,6 +584,89 @@ class FileBasedTranslationMemory:
         #    return self.read_tu_no_flags(row)
         return self.read_tu_with_flags(row)
 
+    def read_attribute_values(self, reader, tus, tu_index, auto_advance_result_set, attributes=None):
+        if attributes is None:
+            attributes = {}
+
+        list_ = []
+        list2 = []
+
+        while True:
+            obj = None
+            num = 0
+            num2 = 0
+            name = None
+            num3 = 0
+
+            while reader.read():
+                num4 = 0
+                flag = reader.field_count == 5
+                int_val = self.get_int32(reader, num4)
+                num4 += 1
+                int2 = self.get_int32(reader, num4)
+                num4 += 1
+
+                if flag:
+                    text = reader.get_string(num4)
+                    num4 += 1
+                    num5 = self.get_int32(reader, num4)
+                else:
+                    if int2 not in attributes:
+                        raise Exception("Invalid attribute ID")
+
+                    attribute_declaration = attributes[int2]
+                    text = attribute_declaration.name
+                    num5 = int(attribute_declaration.type)
+
+                if (int_val != num and num != 0) or (int2 != num2 and num2 != 0):
+                    if num in tu_index:
+                        translation_unit = tus[tu_index[num]]
+                        if num3 != 2:
+                            if num3 == 5:
+                                translation_unit.attributes.append(
+                                    AttributeValue(num2, name, FieldValueType(num3), list2))
+                            else:
+                                translation_unit.attributes.append(
+                                    AttributeValue(num2, name, FieldValueType(num3), obj))
+                        else:
+                            list_.sort()
+                            translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), list_))
+
+                    list2.clear()
+                    list_.clear()
+
+                if num5 == 2:
+                    list_.append(reader.get_string(num4))
+                elif num5 == 3:
+                    obj = self.get_datetime(reader, num4)
+                elif num5 == 4:
+                    obj = reader.get_value(num4)
+                    if isinstance(obj, (decimal, long)):
+                        obj = self.get_int32(reader, num4)
+                elif num5 == 5:
+                    list2.append(self.get_int32(reader, num4))
+
+                num4 += 1
+                num2 = int2
+                name = text
+                num3 = num5
+                num = int_val
+
+            if num2 != 0:
+                if num in tu_index:
+                    translation_unit = tus[tu_index[num]]
+                    if num3 != 2:
+                        if num3 == 5:
+                            translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), list2))
+                        else:
+                            translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), obj))
+                    else:
+                        list_.sort()
+                        translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), list_))
+
+            if not auto_advance_result_set or not reader.next_result():
+                return
+
     def get_tu_set(self, command, count: int, tu_context_data: TuContextData):
         list_of_tus = []
         dictionary = {}
@@ -611,15 +695,42 @@ class FileBasedTranslationMemory:
         # Execute the second query to fetch attribute values
         query = f"""
             SELECT da.translation_unit_id, da.attribute_id, a.name, a.type, da.value
-            FROM date_attributes da
-            INNER JOIN attributes a ON da.attribute_id = a.id
-            WHERE da.translation_unit_id IN ({ids_str})
+            FROM date_attributes da INNER JOIN attributes a ON da.attribute_id = a.id 
+            WHERE da.translation_unit_id IN ({0}) 
             ORDER BY da.translation_unit_id, da.attribute_id;
             """
-        cursor = create_command(query)
-        rows = cursor.fetchall()
-        read_attribute_values(rows, list_of_tus, dictionary, True,
-                              None)  # Assuming read_attribute_values processes the rows
+        query = query.replace('(0)', '(' + ids_str + ')')
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        query = f"""
+            SELECT sa.translation_unit_id, sa.attribute_id, a.name, a.type, sa.value 
+            FROM string_attributes sa INNER JOIN attributes a ON sa.attribute_id = a.id
+            WHERE sa.translation_unit_id IN ({0}) 
+            ORDER BY sa.translation_unit_id, sa.attribute_id;
+            """
+        query = query.replace('(0)', '(' + ids_str + ')')
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        query = f"""
+            SELECT na.translation_unit_id, na.attribute_id, a.name, a.type, na.value 
+            FROM numeric_attributes na INNER JOIN attributes a ON na.attribute_id = a.id
+            WHERE na.translation_unit_id IN ({0}) 
+            ORDER BY na.translation_unit_id, na.attribute_id;
+            """
+        query = query.replace('(0)', '(' + ids_str + ')')
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        query = f"""
+            SELECT pa.translation_unit_id, pv.attribute_id, a.name, a.type, pa.picklist_value_id FROM picklist_attributes pa 
+            INNER JOIN picklist_values pv ON pv.id = pa.picklist_value_id
+            INNER JOIN attributes a ON pv.attribute_id = a.id
+            WHERE pa.translation_unit_id IN ({0})
+            ORDER BY pa.translation_unit_id, pv.attribute_id
+            """
+        query = query.replace('(0)', '(' + ids_str + ')')
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        #read_attribute_values(rows, list_of_tus, dictionary, True, None)  # Assuming read_attribute_values processes the rows
 
         # Process Text Context if available
         if tu_context_data.text_context and tu_context_data.text_context.context1 != -1:
@@ -629,8 +740,8 @@ class FileBasedTranslationMemory:
                 WHERE translation_unit_id IN ({ids_str})
                 AND left_source_context={tu_context_data.text_context.context1}
                 """
-            cursor = create_command(query)
-            rows = cursor.fetchall()
+            self.cursor.execute(query)
+            rows = self.cursor.fetchall()
             read_text_contexts(rows, list_of_tus, dictionary)  # Assuming read_text_contexts processes the rows
 
         # Process ID Context if available
@@ -641,11 +752,33 @@ class FileBasedTranslationMemory:
                 WHERE translation_unit_id IN ({ids_str})
                 AND idcontext='{tu_context_data.id_context}'
                 """
-            cursor = create_command(query)
-            rows = cursor.fetchall()
+            self.cursor.execute(query)
+            rows = self.cursor.fetchall()
             read_id_contexts(rows, list_of_tus, dictionary)  # Assuming read_id_contexts processes the rows
 
         return list_of_tus
+
+    def add_tus_to_result(self, doc_src_segment:AnnotatedSegment, doc_trg_segment:AnnotatedSegment,
+                          results:SearchResults, tus:List[StoTranslationUnit], used_index: FuzzyIndexes,
+                          translator, tu_context_data: TuContextData, last_tuid: int, last_change_date: datetime,
+                          order_descending:bool, acronym_token_indices:[int], skip_rows:int):
+        id_context_matching_candidates_exhausted = False
+        id_context_matching_candidates_found = False
+        unmatched_acronyms = (acronym_token_indices is not None and len(acronym_token_indices) > 0)
+
+        if tus is None or len(tus) == 0:
+            id_context_matching_candidates_exhausted = True
+            return 0, last_tuid, last_change_date, id_context_matching_candidates_found, id_context_matching_candidates_exhausted, unmatched_acronyms, skip_rows
+        num = 0
+        flag = False
+        sorted_list = SortedDict()
+        for i in range(len(results.results)):
+            search_result = results.results[i]
+            sorted_list[search_result.memory_translation_unit.id] = True
+
+        for translation_unit in tus:
+            last_tuid, last_change_date, skip_rows = FileBasedTranslationMemory.set_last_tuid(translation_unit, last_tuid, last_change_date, order_descending, skip_rows)
+            #########start
 
     def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int, max_tuid:int, results:SearchResults, descending_order:bool)->int:
         min_value = datetime.min
@@ -670,21 +803,21 @@ class FileBasedTranslationMemory:
                     if list2 and len(list2) > 0:
                         num = 0
                         if is_source:
-                            self.AddTUsToResult(segment, None, results, list2, fuzzy_indexes2, None, TuContextData(),
-                                                max_tuid, min_value, descending_order, None, None, None, None, num)
+                            self.add_tus_to_result(segment, None, results, list2, fuzzy_indexes2, None, TuContextData(),
+                                                max_tuid, min_value, descending_order, None, num)
                         else:
-                            self.AddTUsToResult(None, segment, results, list2, fuzzy_indexes2, None, TuContextData(),
-                                                max_tuid, min_value, descending_order, None, None, None, None, num)
+                            self.add_tus_to_result(None, segment, results, list2, fuzzy_indexes2, None, TuContextData(),
+                                                max_tuid, min_value, descending_order, None, num)
                     if not (list2 and len(list2) == adjusted_maxresults and results.count() < adjusted_maxresults):
                         break
 
         if (self.tm.fuzzy_indexes & fuzzy_indexes) == 0:
-            return
+            return max_tuid
 
         max_tu_id = 0
         list = segment.concordance_feature_vector
         if not list or len(list) <= 0:
-            return
+            return max_tuid
 
         while True:
             list2 = self.fuzzy_search(self.tm.id, list, fuzzy_indexes, adjusted_minscore,
@@ -692,13 +825,14 @@ class FileBasedTranslationMemory:
             if list2 and len(list2) > 0:
                 num2 = 0
                 if is_source:
-                    self.AddTUsToResult(segment, None, results, list2, fuzzy_indexes, None, TuContextData(), max_tuid,
-                                        min_value, False, None, None, None, None, num2)
+                    self.add_tus_to_result(segment, None, results, list2, fuzzy_indexes, None, TuContextData(), max_tuid,
+                                        min_value, False, None, num2)
                 else:
-                    self.AddTUsToResult(None, segment, results, list2, fuzzy_indexes, None, TuContextData(), max_tuid,
-                                        min_value, False, None, None, None, None, num2)
+                    self.add_tus_to_result(None, segment, results, list2, fuzzy_indexes, None, TuContextData(), max_tuid,
+                                        min_value, False, None, num2)
             if not (list2 and len(list2) == adjusted_maxresults and results.count() < adjusted_maxresults):
                 break
+        return max_tuid
 
 
 

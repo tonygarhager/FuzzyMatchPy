@@ -24,7 +24,7 @@ class SearchResults:
     default_sort_order_concordance = 'Sco/D ChD/D UsC/D'
 
     def __init__(self, default_sort_order:SortSpecification):
-        self.results = List[SearchResult]
+        self.results = []
         self.sort_order = default_sort_order or SearchResults.get_default_sort_order()
         self.multiple_translations:bool = False
         self.source_segment: Segment = None
