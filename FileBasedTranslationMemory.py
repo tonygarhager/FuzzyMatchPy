@@ -1,5 +1,6 @@
 import sqlite3
-import datetime
+from datetime import datetime
+from uuid import UUID
 
 from AnnotatedSegment import AnnotatedSegment
 from AnnotatedTranslationUnit import AnnotatedTranslationUnit
@@ -15,6 +16,8 @@ from LanguageResources import *
 from AnnotatedTranslationMemory import AnnotatedTranslationMemory
 from WordCounts import *
 from FuzzySearcher import *
+from StoTranslationUnit import *
+from StoSegment import *
 
 class FuzzyIndexes:
     SourceWordBased = 1
@@ -132,7 +135,7 @@ class FileBasedTranslationMemory:
         createdVersion = self._getParameter('VERSION_CREATED')
         parameter = self._getParameter('TokenDataVersion')
 
-        self.serializesTokens = False
+        self._serializesTokens = False
 
         if parameter is not None:
             try:
@@ -142,7 +145,7 @@ class FileBasedTranslationMemory:
 
             if result == 0 or result > 1:
                 raise Exception('TokenDataVersion value is unsupported: ' + str(result))
-            self.serializesTokens = True
+            self._serializesTokens = True
 
         if not text:
             return
@@ -213,7 +216,7 @@ class FileBasedTranslationMemory:
         if result == 0 or result > 1:
             raise Exception('AlignmentDataVersion value is unsupported: ' + str(result))
 
-        if not self.serializesTokens:
+        if not self._serializesTokens:
             raise Exception('TM with alignment data support must also serialize tokens')
 
         return True
@@ -405,8 +408,11 @@ class FileBasedTranslationMemory:
                     list.append(item)
 
             self.fuzzy_index_caches[type].add(nint, list)
+    def serializes_tokens(self) -> bool:
+        self._check_version()
+        return self._serializesTokens
 
-    def fuzzy_search(self, tmid:int, feature:[], index:FuzzyIndexes, min_score:int, max_hits:int, concordance:bool, last_tuid:int,
+    def fuzzy_search(self, tm_id:int, feature:[], index:FuzzyIndexes, min_score:int, max_hits:int, concordance:bool, last_tuid:int,
                      tu_context_data:TuContextData, descending_order:bool)->[]:
         self.ensure_fuzzy_index_loaded(index)
         alignment_data_col_spec = self.get_alignment_data_colspec()
@@ -415,7 +421,12 @@ class FileBasedTranslationMemory:
 
         if list is None or len(list) == 0:
             return []
-        query = 'SELECT id, guid, translation_memory_id, \r\n\t\t\t\tsource_hash, source_segment, 0, 0, \r\n\t\t\t\ttarget_hash, target_segment, 0, 0, \r\n\t\t\t\tcreation_date, creation_user, change_date, change_user, last_used_date, last_used_user, usage_counter, flags ' + (', source_token_data, target_token_data ' if self.serializesTokens() else ', null, null ') + alignment_data_col_spec + ', 0, null, null FROM translation_units WHERE id IN ('
+        query = 'SELECT id, guid, translation_memory_id, \r\n\t\t\t\tsource_hash, source_segment, 0, 0, \r\n\t\t\t\ttarget_hash, target_segment, 0, 0, \r\n\t\t\t\tcreation_date, creation_user, change_date, change_user, last_used_date, last_used_user, usage_counter, flags '
+        if self.serializes_tokens():
+            query += ', source_token_data, target_token_data '
+        else:
+            query += ', null, null '
+        query += alignment_data_col_spec + ', 0, null, null FROM translation_units WHERE id IN ('
         flag = True
         for hit in list:
             if flag:
@@ -424,8 +435,217 @@ class FileBasedTranslationMemory:
                 query += ','
             query += str(hit.key)
         query += ')'
-        tuset = []
+        param = {"@tm_id": tm_id}
+        command = [query, param]
 
+        tuset = self.get_tu_set(command, max_hits, tu_context_data)
+        return tuset
+
+    @property
+    def has_flag(self):
+        return True
+
+    @property
+    def has_guids(self):
+        return True
+
+    def read_tu_with_flags(self, row):
+        field_count = len(row)
+
+        def get_int(idx):
+            return None if row[idx] is None else int(row[idx])
+
+        def get_string(idx):
+            return None if row[idx] is None else str(row[idx])
+
+        def get_bytes(idx):
+            return None if row[idx] is None else row[idx]
+
+        def get_date(idx):
+            return None if row[idx] is None else datetime.fromisoformat(row[idx])
+
+        if field_count - 10 > 1:
+            if field_count == 14:
+                return StoTranslationUnit(
+                    get_int(0),
+                    get_string(1) if self.has_guids else get_string(1),
+                    0,
+                    StoSegment(get_int(2), 0, get_string(3), None, get_bytes(12)),
+                    StoSegment(get_int(4), 0, get_string(5), None, get_bytes(13)),
+                    datetime.utcnow(),  # Default date
+                    "",
+                    datetime.utcnow(),  # Default date
+                    "",
+                    datetime.utcnow(),  # Default date
+                    "",
+                    0,
+                    0,
+                    get_bytes(6),
+                    get_bytes(7),
+                    get_bytes(8),
+                    get_date(9),
+                    get_date(10),
+                    get_int(11),
+                )
+            elif field_count == 23:
+                return StoTranslationUnit(
+                    get_int(0),
+                    get_string(1) if self.has_guids else get_string(1),
+                    get_int(2),
+                    StoSegment(get_int(3), 0, get_string(4), None, get_bytes(21)),
+                    StoSegment(get_int(5), 0, get_string(6), None, get_bytes(22)),
+                    get_date(7),
+                    get_string(8),
+                    get_date(9),
+                    get_string(10),
+                    get_date(11),
+                    get_string(12),
+                    get_int(13),
+                    get_int(14),
+                    get_bytes(15),
+                    get_bytes(16),
+                    get_bytes(17),
+                    get_date(18),
+                    get_date(19),
+                    get_int(20),
+                )
+            elif field_count == 25:
+                return StoTranslationUnit(
+                    get_int(0),
+                    get_string(1) if self.has_guids else get_string(1),
+                    get_int(2),
+                    StoSegment(get_int(3), 0, get_string(4) or get_string(5), None, get_bytes(23)),
+                    StoSegment(get_int(6), 0, get_string(7) or get_string(8), None, get_bytes(24)),
+                    get_date(9),
+                    get_string(10),
+                    get_date(11),
+                    get_string(12),
+                    get_date(13),
+                    get_string(14),
+                    get_int(15),
+                    get_int(16),
+                    get_bytes(17),
+                    get_bytes(18),
+                    get_bytes(19),
+                    get_date(20),
+                    get_date(21),
+                    get_int(22),
+                )
+            elif field_count == 27:
+                return StoTranslationUnit(
+                    get_int(0),
+                    get_string(1) if self.has_guids else get_string(1),
+                    get_int(2),
+                    StoSegment(get_int(3), 0, get_string(4), None, get_bytes(25)),
+                    StoSegment(get_int(7), 0, get_string(8), None, get_bytes(26)),
+                    get_date(11),
+                    get_string(12),
+                    get_date(13),
+                    get_string(14),
+                    get_date(15),
+                    get_string(16),
+                    get_int(17),
+                    get_int(18),
+                    get_bytes(19),
+                    get_bytes(20),
+                    get_bytes(21),
+                    get_date(22),
+                    get_date(23),
+                    get_int(24),
+                )
+            else:
+                raise Exception("Invalid data retrieved from storage")
+        else:
+            return StoTranslationUnit(
+                get_int(0),
+                str(int=0),  # Default GUID
+                0,
+                StoSegment(get_int(1), 0, get_string(2), None, get_bytes(8)),
+                StoSegment(0, 0, get_string(3), None, get_bytes(9)),
+                datetime.utcnow(),  # Default date
+                "",
+                datetime.utcnow(),  # Default date
+                "",
+                datetime.utcnow(),  # Default date
+                "",
+                0,
+                get_int(6),
+                get_bytes(4),
+                get_bytes(5),
+                None,
+                None,
+                None,
+                get_int(7),
+            )
+
+    def read_tu(self, row)->StoTranslationUnit:
+        #mod if self.has_flag == False:
+        #    return self.read_tu_no_flags(row)
+        return self.read_tu_with_flags(row)
+
+    def get_tu_set(self, command, count: int, tu_context_data: TuContextData):
+        list_of_tus = []
+        dictionary = {}
+        ids_string = []
+
+        # Execute the initial search query
+        self.cursor.execute(command[0], command[1])
+        rows = self.cursor.fetchall()
+        for row in rows:
+            translation_unit = self.read_tu(row)  # Assuming read_tu is a function that processes the row into a TranslationUnit
+            dictionary[translation_unit.id] = len(list_of_tus)
+
+            if len(list_of_tus) > 0:
+                ids_string.append(", ")
+            ids_string.append(str(translation_unit.id))
+            list_of_tus.append(translation_unit)
+
+            if count > 0 and len(list_of_tus) >= count:
+                break
+
+        ids_str = "".join(ids_string)
+
+        if not list_of_tus:
+            return list_of_tus
+
+        # Execute the second query to fetch attribute values
+        query = f"""
+            SELECT da.translation_unit_id, da.attribute_id, a.name, a.type, da.value
+            FROM date_attributes da
+            INNER JOIN attributes a ON da.attribute_id = a.id
+            WHERE da.translation_unit_id IN ({ids_str})
+            ORDER BY da.translation_unit_id, da.attribute_id;
+            """
+        cursor = create_command(query)
+        rows = cursor.fetchall()
+        read_attribute_values(rows, list_of_tus, dictionary, True,
+                              None)  # Assuming read_attribute_values processes the rows
+
+        # Process Text Context if available
+        if tu_context_data.text_context and tu_context_data.text_context.context1 != -1:
+            query = f"""
+                SELECT translation_unit_id, left_source_context, left_target_context
+                FROM translation_unit_contexts
+                WHERE translation_unit_id IN ({ids_str})
+                AND left_source_context={tu_context_data.text_context.context1}
+                """
+            cursor = create_command(query)
+            rows = cursor.fetchall()
+            read_text_contexts(rows, list_of_tus, dictionary)  # Assuming read_text_contexts processes the rows
+
+        # Process ID Context if available
+        if tu_context_data.id_context:
+            query = f"""
+                SELECT translation_unit_id, idcontext
+                FROM translation_unit_idcontexts
+                WHERE translation_unit_id IN ({ids_str})
+                AND idcontext='{tu_context_data.id_context}'
+                """
+            cursor = create_command(query)
+            rows = cursor.fetchall()
+            read_id_contexts(rows, list_of_tus, dictionary)  # Assuming read_id_contexts processes the rows
+
+        return list_of_tus
 
     def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int, max_tuid:int, results:SearchResults, descending_order:bool)->int:
         min_value = datetime.min

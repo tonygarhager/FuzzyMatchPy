@@ -48,12 +48,12 @@ class AbstractPostingsIterator:
 
     @property
     def current(self) -> Optional[int]:
-        if self.at_end():
+        if self.at_end:
             return None
         return self.postings_list.keys[self.index]
 
     def next(self):
-        if not self.at_end():
+        if not self.at_end:
             self.index -= 1 if self.order_descending else 1
 
 
@@ -194,7 +194,7 @@ class FuzzySearcher:
                 iterators.append(iterator)
                 max_count = max(max_count, iterator.count)
 
-        iterators.sort(key=lambda it: it.count)
+        iterators.sort(key=lambda it: it.count, reverse=descending_order)
 
         score_threshold = min_score / 100.0
         min_match = 1 if min_score == 0 else len(fv) * min_score // 100
@@ -209,8 +209,8 @@ class FuzzySearcher:
             dice_max = len(fv) + int(num / score_threshold)
 
         iterators = [it for it in iterators if not (it.count > 1000 and allowed_misses > 0)]
-
-        while iterators:
+        i = 0
+        while i < len(iterators):
             current_key = max(it.current for it in iterators if not it.at_end) if descending_order else \
                 min(it.current for it in iterators if not it.at_end)
 
@@ -221,6 +221,8 @@ class FuzzySearcher:
             for it in iterators:
                 if not it.at_end and it.current == current_key:
                     it.next()
+                    if it.at_end:
+                        i += 1
 
             if descending_order and current_key > last_key or not descending_order and current_key < last_key:
                 continue
