@@ -95,5 +95,6 @@ class ScoringResult:
         applied_penalty.filter_name = filter_name
         self.applied_penalties.append(applied_penalty)
 
+    @property
     def is_exact_match(self):
         return self.base_score >= 100

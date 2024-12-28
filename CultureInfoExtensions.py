@@ -955,6 +955,11 @@ class CultureInfoExtensions:
 
         return None
 
+    @staticmethod
+    def use_full_width(culture_name:str)->bool:
+        twoletter = StringUtils.get_iso_language_code(culture_name).lower()
+        return twoletter == 'ja' or twoletter == 'zh' or twoletter == 'ko'
+
 if __name__ == "__main__":
     CultureInfoExtensions.__init__()
     ret = CultureInfoExtensions.get_culture_info('en-US')

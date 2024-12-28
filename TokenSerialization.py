@@ -1,5 +1,11 @@
 import struct
 from enum import Enum
+
+from lxml.html.diff import tag_token
+
+from NumberToken import *
+from Tag import Tag
+from TagToken import TagToken
 from Token import *
 from DateTimeRecognizer import *
 import datetime
@@ -104,9 +110,8 @@ class TokenSerialization:
         if data is None:
             return None
         result = []
-        with MemoryStream(data) as memory_stream:
-            with BinaryReader(memory_stream) as binary_reader:
-                result = TokenSerialization.load_tokens_from_reader(binary_reader, segment)
+        with io.BytesIO(data) as binary_reader:
+            result = TokenSerialization.load_tokens_from_reader(binary_reader, segment)
         return result
 
     @staticmethod
@@ -185,11 +190,11 @@ class TokenSerialization:
 
         def deserialize(self):
             serialization_version = struct.unpack("B", self._reader.read(1))[0]
-            compact_serialization = serialization_version != 1
+            self.compact_serialization = serialization_version != 1
 
             list_tokens = []
             num = self.read_int_as_short()
-
+            self._element_index_adjustment = 0
             for i in range(num):
                 previous_token = list_tokens[i-1] if i > 0 else None
                 token_has_standard_placement = False
@@ -209,7 +214,7 @@ class TokenSerialization:
                     num2 -= TokenSerialization.TokenTypeStandardPlacementFlag
                     token_has_standard_placement = True
 
-                token_type = TokenType(num2)
+                token_type = num2
                 token_class = TokenSerialization._token_type_to_token_class_map.get(token_type)
 
                 if token_class is None:
@@ -231,20 +236,34 @@ class TokenSerialization:
                     list_tokens.append(self.read_simple_token(True, token_type, token_has_standard_placement, previous_token, token_is_single_char))
                 else:
                     raise Exception(f"Unexpected TokenClass in LoadTokens: {token_class}")
+            self.read_additional_data_if_present(list_tokens)
 
+            for token in list_tokens:
+                token.culture_name = self._segment.culture_name
             return list_tokens
 
-        def read_int_as_short(self):
+        def read_additional_data_if_present(self, tokens):
+            self.read_measure_categories_and_datetime_formats_if_present(tokens)
+
+        def read_measure_categories_and_datetime_formats_if_present(self, tokens):
+            return#mod
+
+        def read_byte(self):
+            return struct.unpack("B", self._reader.read(1))[0]
+        def read_short(self):
             return struct.unpack("h", self._reader.read(2))[0]
+        def read_int(self):
+            return struct.unpack('i', self._reader.read(4))[0]
+
+        def read_int_as_short(self):
+            if self.compact_serialization:
+                return self.read_short()
+            return self.read_int()
 
         def read_int_as_byte(self) -> int:
-            # Equivalent to C# ReadIntAsByte method
             if self.compact_serialization:
-                # Read as a byte
                 return self.read_byte()
-            else:
-                # Read as a full integer (4 bytes)
-                return self.read_int()
+            return self.read_int()
 
         def read_date_time_token(self, token_type, token_has_standard_placement, previous_token, token_is_single_char):
             # Read the DateTime pattern type (as a byte, assuming it's a byte-based enum)
@@ -252,7 +271,7 @@ class TokenSerialization:
             pattern_type = DateTimePatternType(pattern_type_value)
 
             # Read the DateTime value (as 64-bit integer - similar to C#)
-            date_time_binary = struct.unpack('<q', self.reader.read(8))[0]
+            date_time_binary = struct.unpack('<q', self._reader.read(8))[0]
             date_time = datetime.fromtimestamp(date_time_binary)
 
             # Read a SimpleToken to build the DateTimeToken
@@ -267,13 +286,91 @@ class TokenSerialization:
             return date_time_token
 
         def read_number_token(self, token_type, token_has_standard_placement, previous_token, token_is_single_char):
-            raise Exception("read_number_token")
+            sign:Sign = self.read_int_as_byte()
+            raw_sign = self.read_string_or_null()
+            decimal_separator = NumericSeparator(self.read_int_as_sbyte())
+            group_separator = NumericSeparator(self.read_int_as_sbyte())
+            alternate_group_separator = self._reader.read_char()
+            alternate_decimal_separator = self._reader.read_char()
+            raw_fractional_digits = self.read_string_or_null()
+            raw_decimal_digits = self.read_string_or_null()
+
+            simple_token = SimpleToken()
+            self.read_token(simple_token, token_has_standard_placement, previous_token, token_is_single_char)
+
+            number_token = NumberToken(
+                simple_token.text,
+                group_separator,
+                decimal_separator,
+                alternate_group_separator,
+                alternate_decimal_separator,
+                sign,
+                raw_sign,
+                raw_decimal_digits,
+                raw_fractional_digits
+            )
+
+            # Assuming TokenSerialization.TokenDeserializer.CopyToken copies token data
+            # Copy token details from simple_token to number_token (can be adapted as needed)
+            TokenSerialization.TokenDeserializer.copy_token(simple_token, number_token)
+
+            number_token.type = token_type
+            return number_token
 
         def read_measure_token(self, token_type, token_has_standard_placement, previous_token, token_is_single_char):
             raise Exception("read_measure_token")
 
-        def read_tag_token(self, token_type):
-            raise Exception("read_tag_token")
+        def read_tag_token(self, token_type) -> TagToken:
+            tag_token = TagToken()
+            num = self.read_int_as_byte()
+            num -= self._element_index_adjustment
+            tag_token.tag = self.read_tag(num)
+            tag_token.span = SegmentRange.create_3i(num, 0, 0)
+            tag_token.text = str(tag_token.tag)
+            tag_token.type = token_type
+            return tag_token
+
+        def read_tag(self, seg_elem_index:int) -> Tag:
+            if len(self._segment.elements) <= seg_elem_index:
+                raise Exception("Segment content incorrect: could not have produced the serialized Tag token")
+            return self._segment.elements[seg_elem_index]
+
+        def read_token(self, t:Token, token_has_standard_placement:bool, previous_token:Token, token_is_single_char:bool):
+            self.read_text_and_span(t, token_has_standard_placement, previous_token, token_is_single_char)
+
+        def read_text_and_span(self, token:Token, token_has_standard_placement:bool, previous_token:Token, token_is_single_char):
+            if token_has_standard_placement:
+                num = previous_token.span.fro.index
+                num2 = previous_token.span.fro.position + previous_token.span.length
+            else:
+                num = self.read_int_as_byte()
+                num -= self._element_index_adjustment
+                num2 = self.read_int_as_short()
+            num3 = 1 if token_is_single_char else self.read_int_as_byte()
+            token.span = SegmentRange.create_3i(num, num2, num2 + num3 - 1)
+
+            if (previous_token is not None and
+                isinstance(token, TagToken) == False and
+                isinstance(previous_token, TagToken) == False and
+                token.span.fro.index == previous_token.span.fro.index + 1):
+                text = self._segment.elements[previous_token.span.fro.index]
+                if text is not None:
+                    num4 = previous_token.span.fro.position + previous_token.span.length
+                    if len(text.value) >= num4 + num3:
+                        num2 = num4
+                        token.span = SegmentRange.create_3i(previous_token.span.fro.index, num2, num2 + num3 - 1)
+                        self._element_index_adjustment += 1
+            if len(self._segment.elements) <= token.span.fro.index:
+                raise Exception('Segment content incorrect: could not have produced the serialized Token')
+            token.text = str(self._segment.elements[token.span.fro.index])[num2:num2 + num3]
 
         def read_simple_token(self, is_generic_placeable, token_type, token_has_standard_placement, previous_token, token_is_single_char):
-            raise Exception("read_simple_token")
+            simple_token = SimpleToken()
+            if is_generic_placeable:
+                token_class = self.read_string()
+                is_substitutable = self.read_boolean()
+                simple_token = GenericPlaceableToken('', token_class, is_substitutable)
+            self.read_token(simple_token, token_has_standard_placement, previous_token, token_is_single_char)
+            simple_token.type = token_type
+            return simple_token
+

@@ -4,8 +4,9 @@ from Token import Token, TokenType
 
 
 class TagToken(Token):
-    def __init__(self, tag:Tag):
-        super().__init__(tag.to_string())
+    def __init__(self, tag:Tag = None):
+        if tag is not None:
+            super().__init__(tag.to_string())
         self.tag = tag
 
     def update_value(self, blue_print, update_values_only:bool = False):

@@ -25,12 +25,7 @@ from SegmentSerialize import *
 from TokenSerialization import *
 from PesistentObjectToken import *
 from datetime import datetime
-
-class FuzzyIndexes:
-    SourceWordBased = 1
-    SourceCharacterBased = 2
-    TargetCharacterBased = 4
-    TargetWordBased = 8
+from AbstractScorer import *
 
 class FileBasedTranslationMemory:
     def __init__(self, tmPath):
@@ -42,6 +37,13 @@ class FileBasedTranslationMemory:
         self._create_connection()
         if self.FilePath.endswith('.sdltm'):
             self._importSdltmFile()
+
+        self._origins_to_normalize = [TranslationUnitOrigin.Unknown,
+			TranslationUnitOrigin.ContextTM,
+			TranslationUnitOrigin.AdaptiveMachineTranslation,
+			TranslationUnitOrigin.AutomaticTranslation,
+			TranslationUnitOrigin.MachineTranslation,
+			TranslationUnitOrigin.Nmt]
 
     def destruct(self):
         self._close_connection()
@@ -325,6 +327,7 @@ class FileBasedTranslationMemory:
         self.settings = settings
         anno_tm = self.get_annotated_translation_memory(self.tm.id)
         self.anno_tm = anno_tm
+        self._scorer = Scorer(self.anno_tm, self.settings, True)
         anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
         self.anno_tu = anno_tu
         is_concordance_search = settings.is_concordance_search
@@ -783,6 +786,51 @@ class FileBasedTranslationMemory:
         translation_unit.trg_segment.tokens = TokenSerialization.load_tokens(storage_tu.target_token_data, translation_unit.trg_segment)
         self.fill_remaining_translation_unit_details(translation_unit, storage_tu, fields)
         translation_unit.resource_id = PersistentObjectToken(storage_tu.id, storage_tu.guid)
+        return translation_unit
+
+    @staticmethod
+    def set_tu_flags_legacy_column(tu:TranslationUnit, storage_tu:StoTranslationUnit):
+        num = storage_tu.flags
+        try:
+            num2 = num & 255
+            tu.origin:TranslationUnitOrigin = num2
+            num >>= 8
+            num2 = num & 255
+            tu.format:TranslationUnitFormat = num2
+            num >>= 8
+            num2 = num & 255
+            tu.confirmationLevel:ConfirmationLevel = num2
+        except Exception:
+            pass
+
+    def set_tu_flags(self, tu:TranslationUnit, storage_tu:StoTranslationUnit):
+        FileBasedTranslationMemory.set_tu_flags_legacy_column(tu, storage_tu)
+
+        if tu.origin in self._origins_to_normalize:
+            tu.origin = TranslationUnitOrigin.TM
+
+
+    def fill_remaining_translation_unit_details(self, tu:TranslationUnit, storage_tu:StoTranslationUnit, fields: FieldDefinitions):
+        if storage_tu is None:
+            raise Exception('storageTu')
+        tu.origin = TranslationUnitOrigin.TM
+        tu.system_fields.use_count = storage_tu.usage_counter
+        tu.system_fields.use_date = storage_tu.last_used_date
+        tu.system_fields.use_user = storage_tu.last_used_user
+        tu.system_fields.creation_user = storage_tu.creation_user
+        tu.system_fields.creation_date = storage_tu.creation_date
+        tu.system_fields.change_user = storage_tu.change_user
+        tu.system_fields.change_date = storage_tu.change_date
+        tu.contexts = storage_tu.contexts
+        tu.id_contexts = storage_tu.id_contexts
+        tu.alignment_data = storage_tu.alignment_data
+        tu.align_model_date = storage_tu.align_model_date
+        tu.insert_date = storage_tu.insert_date
+        tu.field_values = fields#mod
+        self.set_tu_flags(tu, storage_tu)
+
+        PlaceableComputer.convert_placeables_to_alignments(PlaceableComputer.compute_placeables(tu.src_segment, tu.trg_segment), tu.alignment_data, tu.src_segment.tokens, tu.trg_segment.tokens)
+
 
     def set_last_tuid(tu:StoTranslationUnit, last_tuid, last_change_date, order_descending, skip_rows):
         if tu.id > last_tuid and not order_descending:
@@ -829,10 +877,32 @@ class FileBasedTranslationMemory:
                 if self.settings.is_concordance_search == False:
                     self.anno_tm.source_tools.ensure_tokenized_segment(search_result2.memory_translation_unit.src_segment, False, True)
                     self.anno_tm.target_tools.ensure_tokenized_segment(search_result2.memory_translation_unit.trg_segment, False, True)
+                if (self.settings.mode != SearchMode.DuplicateSearch or
+                    (len(translation_unit2.src_segment.tokens) == len(doc_src_segment.segment.tokens) and
+                    len(translation_unit2.trg_segment.tokens) == len(doc_trg_segment.segment.tokens))):
+                    if self.settings.is_concordance_search == False:
+                        search_result2.memory_placeables = PlaceableComputer.compute_placeables(translation_unit2)
+                    if self.settings.is_document_search == False:
+                        tu_context_data.text_context = None
+                    search_result2.scoring_result = ScoringResult()
+                    #mod
+                    if search_result2.scoring_result.id_context_match == False:
+                        id_context_matching_candidates_exhausted = True
+                    else:
+                        id_context_matching_candidates_exhausted = False
 
+                    self._scorer.compute_scores(search_result2, doc_src_segment, doc_trg_segment, None, tu_context_data, self.settings.mode == SearchMode.DuplicateSearch, used_index, False)
 
-
-
+                    if search_result2.scoring_result.match >= self.settings.min_score:
+                        #mod
+                        if search_result2.scoring_result.match >= self.settings.min_score and (self.settings.mode != SearchMode.ExactSearch or search_result2.scoring_result.is_exact_match):
+                            search_result2.context_data = TuContext(translation_unit.source.hash, translation_unit.target.hash)
+                            results.append(search_result2)
+                            sorted_list[search_result2.memory_translation_unit.id] = True
+                            num += 1
+                            if search_result2.scoring_result.is_exact_match:
+                                flag = True
+        return num
 
     def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int, max_tuid:int, results:SearchResults, descending_order:bool)->int:
         min_value = datetime.min

@@ -37,7 +37,7 @@ class Segment:
     @staticmethod
     def _trim_element(t:Text, trailing:bool) -> Tuple[bool, str]:
         trimmed:str = None
-        if not t:
+        if isinstance(t, Text) == False:
             return False, str
         if trailing:
             t.value, trimmed = StringUtils.trim_end(t.value, StringUtils.whitespace_characters)

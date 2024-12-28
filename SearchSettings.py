@@ -14,6 +14,7 @@ class SearchSettings:
                  _mode:int,
                  _max_results:int,
                  _min_score:int):
+        self.is_document_search = False
         self.mode = _mode
         self.max_results = _max_results
         self.min_score = _min_score

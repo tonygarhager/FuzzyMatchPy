@@ -17,6 +17,9 @@ class Text(SegmentElement):
 
         return SegmentElement.Similarity.IdenticalValueAndType
 
+    def __str__(self):
+        return self.value
+
     @staticmethod
     def from_xml(element):
         value = element.find('Value').text

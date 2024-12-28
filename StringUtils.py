@@ -4,6 +4,14 @@ import string
 import re
 from typing import List
 from typing import Tuple
+import ctypes
+from ctypes import wintypes
+class LPNLSVERSIONINFO(ctypes.Structure):
+    _fields_ = [
+        ("dwNLSVersionInfoSize", wintypes.DWORD),  # Size of the structure
+        ("dwNLSVersion", wintypes.DWORD),         # Version of the NLS data
+        ("dwDefinedVersion", wintypes.DWORD),     # Defined version of the NLS data
+    ]
 
 class StringUtils:
     whitespace_characters = ['\t',

@@ -3,25 +3,25 @@ from SegmentElement import SegmentElement
 from abc import ABC, abstractmethod
 
 class TokenType:
-    Unknown = -1
-    Word = 0
-    Abbreviation = 1
-    CharSequence = 2
-    GeneralPunctuation = 3
-    OpeningPunctuation = 4
-    ClosingPunctuation = 5
-    Date = 6
-    Time = 7
-    Variable = 8
-    Number = 9
-    Measurement = 10
-    Whitespace = 11
-    Acronym = 12
-    Uri = 13
-    OtherTextPlaceable = 14
-    UserDefined = 15
-    Tag = 16
-    AlphaNumeric = 17
+    Unknown = 0
+    Word = 1
+    Abbreviation = 2
+    CharSequence = 3
+    GeneralPunctuation = 4
+    OpeningPunctuation = 5
+    ClosingPunctuation = 6
+    Date = 7
+    Time = 8
+    Variable = 9
+    Number = 10
+    Measurement = 11
+    Whitespace = 12
+    Acronym = 13
+    Uri = 14
+    OtherTextPlaceable = 15
+    UserDefined = 16
+    Tag = 17
+    AlphaNumeric = 18
 
 class Token(SegmentElement, ABC):
     def __init__(self, text:str = None, culture_name:str = None):
@@ -54,7 +54,6 @@ class Token(SegmentElement, ABC):
     def get_token_type(self)->TokenType:
         pass
 
-    @abstractmethod
     def set_token_type(self, type:TokenType):
         pass
 

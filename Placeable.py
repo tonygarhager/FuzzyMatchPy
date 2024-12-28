@@ -345,3 +345,7 @@ class PlaceableComputer:
             return PlaceableType.LockedContent
         return PlaceableType.Non
 
+    @staticmethod
+    def convert_placeables_to_alignments(placeables:[], alignment_data, source_tokens:[], target_tokens:[]):
+        pass
+

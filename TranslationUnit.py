@@ -3,6 +3,33 @@ from SystemFields import SystemFields
 from Tag import *
 from typing import *
 
+class TranslationUnitOrigin:
+    Unknown = 0
+    TM = 1
+    MachineTranslation = 2
+    Alignment = 3
+    ContextTM = 4
+    AdaptiveMachineTranslation = 5
+    Nmt = 6
+    AutomaticTranslation = 7
+
+class TranslationUnitFormat:
+    SDLTradosStudio2009 = 0
+    Unknown = 1
+    SDLX = 2
+    TradosTranslatorsWorkbench = 3
+    IdiomWorldServer = 4
+    TradosTTX = 5
+    SDLItd = 6
+class ConfirmationLevel:
+    Unspecified = 0
+    Draft = 1
+    Translated = 2
+    RejectedTranslation = 3
+    ApprovedTranslation = 4
+    RejectedSignOff = 5
+    ApprovedSignOff = 6
+
 class TranslationUnit:
     def __init__(self, _src_segment:Segment = None, _tgr_segment:Segment = None):
         self.src_segment:Segment = _src_segment
