@@ -19,6 +19,12 @@ from FuzzySearcher import *
 from StoTranslationUnit import *
 from StoSegment import *
 from sortedcontainers import SortedDict
+from Field import *
+from XML import XmlSegmentSerializer
+from SegmentSerialize import *
+from TokenSerialization import *
+from PesistentObjectToken import *
+from datetime import datetime
 
 class FuzzyIndexes:
     SourceWordBased = 1
@@ -30,6 +36,7 @@ class FileBasedTranslationMemory:
     def __init__(self, tmPath):
         self.fuzzy_index_caches = [InMemoryFuzzyIndex()] * 10
         self.tm:TranslationMemory = None
+        self.field_declaration = FieldDefinitions()
         # Set file path
         self.FilePath = tmPath
         self._create_connection()
@@ -317,8 +324,10 @@ class FileBasedTranslationMemory:
     def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit):
         self.settings = settings
         anno_tm = self.get_annotated_translation_memory(self.tm.id)
+        self.anno_tm = anno_tm
         anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
-        is_concordance_search = settings.is_concordance_search()
+        self.anno_tu = anno_tu
+        is_concordance_search = settings.is_concordance_search
         flag = settings.mode == SearchMode.TargetConcordanceSearch
 
         if settings.min_score < SearchSettings.min_score_lower_bound:
@@ -758,6 +767,41 @@ class FileBasedTranslationMemory:
 
         return list_of_tus
 
+    def deserialize_tu_segments(self, storage_tu:StoTranslationUnit, tu:TranslationUnit, source_culture_name:str, target_culture_name:str):
+        if storage_tu.serialization_version == 0:
+            xml_segment_serializer = XmlSegmentSerializer()
+            tu.src_segment = xml_segment_serializer.deserialize_segment(storage_tu.source.text)
+            tu.trg_segment = xml_segment_serializer.deserialize_segment(storage_tu.target.text)
+            return
+        tu.src_segment = SegmentSerialization.load(storage_tu.source, source_culture_name)
+        tu.trg_segment = SegmentSerialization.load(storage_tu.target, target_culture_name)
+
+    def get_translation_unit(self, storage_tu:StoTranslationUnit, fields: FieldDefinitions, source_culture_name:str, target_culture_name:str):
+        translation_unit = TranslationUnit()
+        self.deserialize_tu_segments(storage_tu, translation_unit, source_culture_name, target_culture_name)
+        translation_unit.src_segment.tokens = TokenSerialization.load_tokens(storage_tu.source_token_data, translation_unit.src_segment)
+        translation_unit.trg_segment.tokens = TokenSerialization.load_tokens(storage_tu.target_token_data, translation_unit.trg_segment)
+        self.fill_remaining_translation_unit_details(translation_unit, storage_tu, fields)
+        translation_unit.resource_id = PersistentObjectToken(storage_tu.id, storage_tu.guid)
+
+    def set_last_tuid(tu:StoTranslationUnit, last_tuid, last_change_date, order_descending, skip_rows):
+        if tu.id > last_tuid and not order_descending:
+            last_tuid = tu.id
+        if tu.id < last_tuid and order_descending:
+            last_tuid = tu.id
+        if tu.change_date > last_change_date and not order_descending:
+            last_change_date = tu.change_date
+            skip_rows = 1
+            return last_tuid, last_change_date, skip_rows
+        if tu.change_date < last_change_date and order_descending:
+            last_change_date = tu.change_date
+            skip_rows = 1
+            return last_tuid, last_change_date, skip_rows
+        if tu.change_date == last_change_date:
+            skip_rows += 1
+
+        return last_tuid, last_change_date, skip_rows
+
     def add_tus_to_result(self, doc_src_segment:AnnotatedSegment, doc_trg_segment:AnnotatedSegment,
                           results:SearchResults, tus:List[StoTranslationUnit], used_index: FuzzyIndexes,
                           translator, tu_context_data: TuContextData, last_tuid: int, last_change_date: datetime,
@@ -778,7 +822,17 @@ class FileBasedTranslationMemory:
 
         for translation_unit in tus:
             last_tuid, last_change_date, skip_rows = FileBasedTranslationMemory.set_last_tuid(translation_unit, last_tuid, last_change_date, order_descending, skip_rows)
-            #########start
+            if not translation_unit.id in sorted_list.keys():
+                translation_unit2 = self.get_translation_unit(translation_unit, self.field_declaration, self.anno_tu.translation_unit.src_segment.culture_name, self.anno_tu.translation_unit.trg_segment.culture_name)
+                search_result2 = SearchResult(translation_unit2)
+
+                if self.settings.is_concordance_search == False:
+                    self.anno_tm.source_tools.ensure_tokenized_segment(search_result2.memory_translation_unit.src_segment, False, True)
+                    self.anno_tm.target_tools.ensure_tokenized_segment(search_result2.memory_translation_unit.trg_segment, False, True)
+
+
+
+
 
     def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int, max_tuid:int, results:SearchResults, descending_order:bool)->int:
         min_value = datetime.min

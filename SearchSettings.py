@@ -21,5 +21,6 @@ class SearchSettings:
         self.check_matching_sub_languages = False
         self.advanced_tokenization_legacy_scoring = False
 
+    @property
     def is_concordance_search(self) -> bool:
         return self.mode == SearchMode.ConcordanceSearch or self.mode == SearchMode.TargetConcordanceSearch
