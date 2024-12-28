@@ -10,6 +10,27 @@ class TagType:
     UnmatchedStart = 6
     UnmatchedEnd = 7
 
+    @staticmethod
+    def fromStringType(stype:str):
+        if stype == 'Undefined':
+            return TagType.Undefined
+        elif stype == 'Start':
+            return TagType.Start
+        elif stype == 'End':
+            return TagType.End
+        elif stype == 'Standalone':
+            return TagType.Standalone
+        elif stype == 'TextPlaceholder':
+            return TagType.TextPlaceholder
+        elif stype == 'LockedContent':
+            return TagType.LockedContent
+        elif stype == 'UnmatchedStart':
+            return TagType.UnmatchedStart
+        elif stype == 'UnmatchedEnd':
+            return TagType.UnmatchedEnd
+        else:
+            return TagType.Undefined
+
 class Tag(SegmentElement):
     def __init__(self, type:TagType = TagType.Undefined,
                  tagid:str = '',
@@ -25,6 +46,37 @@ class Tag(SegmentElement):
 
         if type == TagType.TextPlaceholder or type == TagType.LockedContent:
             self.text_equivalent = text_equivalent
+
+    @staticmethod
+    def from_xml(element):
+        stag_type = element.find('Type').text
+        tag_type = TagType.fromStringType(stag_type)
+        tag_id = element.find('TagID')
+        if tag_id is not None:
+            tag_id = tag_id.text
+        else:
+            tag_id = ''
+        anchor = element.find('Anchor')
+        if anchor is not None:
+            anchor = int(anchor.text)
+        else:
+            anchor = 0
+        alignment_anchor = element.find('AlignmentAnchor')
+        if alignment_anchor is not None:
+            alignment_anchor = int(alignment_anchor.text)
+        else:
+            alignment_anchor = 0
+
+        canhide = element.find('CanHide')
+        if canhide is not None:
+            if canhide.text.lower() == 'true':
+                canhide = True
+            else:
+                canhide = False
+        else:
+            canhide = False
+
+        return Tag(tag_type,tag_id,anchor,alignment_anchor,'', canhide)
 
     def get_similarity(self, other):
         if isinstance(other, Tag) == False or self.type != other.type:
