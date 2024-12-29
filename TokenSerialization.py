@@ -11,6 +11,7 @@ from DateTimeRecognizer import *
 import datetime
 from DateTimeToken import *
 from SimpleToken import *
+import codecs
 
 class TokenClass(Enum):
     DateTimeToken = 1
@@ -20,6 +21,10 @@ class TokenClass(Enum):
     TagToken = 5
     GenericPlaceableToken = 6
 
+class NumericSeparator(Enum):
+    Non = 0
+    Primary = 1
+    Alternate = 2
 
 class MemoryStream:
     def __init__(self, data: bytes):
@@ -250,10 +255,48 @@ class TokenSerialization:
 
         def read_byte(self):
             return struct.unpack("B", self._reader.read(1))[0]
+        def read_sbyte(self):
+            return struct.unpack("b", self._reader.read(1))[0]
         def read_short(self):
             return struct.unpack("h", self._reader.read(2))[0]
         def read_int(self):
             return struct.unpack('i', self._reader.read(4))[0]
+        def read_boolean(self):
+            return struct.unpack('?', self._reader.read(1))[0]
+
+        def read_7bit_encoded_int(self):
+            """
+            Reads a 7-bit encoded integer from the stream.
+            :return: The decoded integer.
+            """
+            result = 0
+            shift = 0
+
+            while shift != 35:  # Prevents overflow (7 bits * 5 = 35 bits)
+                byte = self.read_byte()
+                result |= (byte & 0x7F) << shift
+                shift += 7
+
+                if (byte & 0x80) == 0:  # Check if the high bit is not set
+                    return result
+
+            raise ValueError("Bad 7-bit encoded integer format.")
+
+        def read_string(self):
+            """
+            Reads a string prefixed with its length (7-bit encoded integer).
+            :return: The decoded string.
+            """
+            string_length = self.read_7bit_encoded_int()
+            string_bytes = self._reader.read(string_length)
+            if len(string_bytes) != string_length:
+                raise EOFError("End of stream reached while reading string data.")
+            return string_bytes.decode('utf-8')
+
+        def read_string_or_null(self):
+            if self.read_boolean():
+                return self.read_string()
+            return None
 
         def read_int_as_short(self):
             if self.compact_serialization:
@@ -264,6 +307,34 @@ class TokenSerialization:
             if self.compact_serialization:
                 return self.read_byte()
             return self.read_int()
+
+        def read_int_as_sbyte(self):
+            if self.compact_serialization:
+                return self.read_sbyte()
+            return self.read_int()
+
+        def read_char(self):
+            result = self._internal_read_one_char()
+            if result is None:
+                raise EOFError("Unable to read beyond the end of the stream.")
+            return result
+
+        def _internal_read_one_char(self):
+            # Initialize buffers if not already done
+            char_bytes = bytearray(1)
+            single_char = []
+            self.decoder = codecs.getincrementaldecoder('utf-8')()
+            while True:
+                # Read a single byte
+                byte = self._reader.read(1)
+                if not byte:
+                    return None  # End of stream
+
+                # Add the byte to the decoder and try to decode it into a character
+                char_bytes[0] = byte[0]
+                decoded_char = self.decoder.decode(bytes(char_bytes), final=False)
+                if decoded_char:
+                    return decoded_char
 
         def read_date_time_token(self, token_type, token_has_standard_placement, previous_token, token_is_single_char):
             # Read the DateTime pattern type (as a byte, assuming it's a byte-based enum)
@@ -288,10 +359,10 @@ class TokenSerialization:
         def read_number_token(self, token_type, token_has_standard_placement, previous_token, token_is_single_char):
             sign:Sign = self.read_int_as_byte()
             raw_sign = self.read_string_or_null()
-            decimal_separator = NumericSeparator(self.read_int_as_sbyte())
-            group_separator = NumericSeparator(self.read_int_as_sbyte())
-            alternate_group_separator = self._reader.read_char()
-            alternate_decimal_separator = self._reader.read_char()
+            decimal_separator:NumericSeparator = self.read_int_as_sbyte()
+            group_separator:NumericSeparator = self.read_int_as_sbyte()
+            alternate_group_separator = self.read_char()
+            alternate_decimal_separator = self.read_char()
             raw_fractional_digits = self.read_string_or_null()
             raw_decimal_digits = self.read_string_or_null()
 
