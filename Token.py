@@ -58,19 +58,21 @@ class Token(SegmentElement, ABC):
         pass
 
     def is_punctuation(self):
-        type == TokenType.GeneralPunctuation or type == TokenType.OpeningPunctuation or type == TokenType.ClosingPunctuation
+        return (self.type == TokenType.GeneralPunctuation or
+                self.type == TokenType.OpeningPunctuation or
+                self.type == TokenType.ClosingPunctuation)
 
     @property
     def is_word(self):
-        return (type == TokenType.Word or
-                type == TokenType.Abbreviation or
-                type == TokenType.Acronym or
-                type == TokenType.Uri or
-                type == TokenType.OtherTextPlaceable)
+        return (self.type == TokenType.Word or
+                self.type == TokenType.Abbreviation or
+                self.type == TokenType.Acronym or
+                self.type == TokenType.Uri or
+                self.type == TokenType.OtherTextPlaceable)
 
     @property
     def is_whitespace(self):
-        type == TokenType.Whitespace
+        return self.type == TokenType.Whitespace
 
     @property
     def is_placeable(self):

@@ -1,8 +1,4 @@
 import struct
-from enum import Enum
-
-from lxml.html.diff import tag_token
-
 from NumberToken import *
 from Tag import Tag
 from TagToken import TagToken
@@ -20,11 +16,6 @@ class TokenClass(Enum):
     SimpleToken = 4
     TagToken = 5
     GenericPlaceableToken = 6
-
-class NumericSeparator(Enum):
-    Non = 0
-    Primary = 1
-    Alternate = 2
 
 class MemoryStream:
     def __init__(self, data: bytes):
@@ -247,6 +238,10 @@ class TokenSerialization:
                 token.culture_name = self._segment.culture_name
             return list_tokens
 
+        @staticmethod
+        def copy_token(source:Token, target:Token):
+            target.span = source.span.duplicate()
+
         def read_additional_data_if_present(self, tokens):
             self.read_measure_categories_and_datetime_formats_if_present(tokens)
 
@@ -389,7 +384,14 @@ class TokenSerialization:
             return number_token
 
         def read_measure_token(self, token_type, token_has_standard_placement, previous_token, token_is_single_char):
-            raise Exception("read_measure_token")
+            unit:Unit = self.read_int_as_byte()
+            unit_separator = self.read_char()
+            unit_string = self.read_string_or_null()
+            number_token = self.read_number_token(TokenType.Number, token_has_standard_placement, previous_token, token_is_single_char)
+            measure_token = MeasureToken(number_token.text, number_token, unit, unit_string, unit_separator)
+            TokenSerialization.TokenDeserializer.copy_token(number_token, measure_token)
+            measure_token.type = token_type
+            return measure_token
 
         def read_tag_token(self, token_type) -> TagToken:
             tag_token = TagToken()

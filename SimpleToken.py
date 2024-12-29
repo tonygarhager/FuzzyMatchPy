@@ -23,7 +23,7 @@ class SimpleToken(Token):
                 self.type == TokenType.AlphaNumeric)
 
     def get_similarity(self, other):
-        bundle_similarity = Token.get_bundle_similarity(other)
+        bundle_similarity = super().get_bundle_similarity(other)
 
         if not other or self.type != other.type:
             return bundle_similarity

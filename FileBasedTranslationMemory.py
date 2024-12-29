@@ -327,7 +327,14 @@ class FileBasedTranslationMemory:
         self.settings = settings
         anno_tm = self.get_annotated_translation_memory(self.tm.id)
         self.anno_tm = anno_tm
-        self._scorer = Scorer(self.anno_tm, self.settings, True)
+        if self.settings.mode == SearchMode.ConcordanceSearch or self.settings.mode == SearchMode.TargetConcordanceSearch:
+            self._default_sort_order = SortSpecification(SearchResults.default_sort_order_concordance)
+            self._scorer = Scorer(self.anno_tm, self.settings, True)
+        else:
+            self._default_sort_order = SortSpecification(SearchResults.default_sort_order)
+            flag = self.settings.find_penalty(PenaltyType.CharacterWidthDifference) != None
+            self._scorer = Scorer(self.anno_tm, self.settings, flag)
+
         anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
         self.anno_tu = anno_tu
         is_concordance_search = settings.is_concordance_search
@@ -897,14 +904,15 @@ class FileBasedTranslationMemory:
                         #mod
                         if search_result2.scoring_result.match >= self.settings.min_score and (self.settings.mode != SearchMode.ExactSearch or search_result2.scoring_result.is_exact_match):
                             search_result2.context_data = TuContext(translation_unit.source.hash, translation_unit.target.hash)
-                            results.append(search_result2)
+                            results.results.append(search_result2)
                             sorted_list[search_result2.memory_translation_unit.id] = True
                             num += 1
                             if search_result2.scoring_result.is_exact_match:
                                 flag = True
         return num
 
-    def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int, max_tuid:int, results:SearchResults, descending_order:bool)->int:
+    def run_concordance_search(self, segment:AnnotatedSegment, is_source:bool, adjusted_minscore:int, adjusted_maxresults:int,
+                               max_tuid:int, results:SearchResults, descending_order:bool)->int:
         min_value = datetime.min
         if is_source:
             fuzzy_indexes = FuzzyIndexes.SourceCharacterBased

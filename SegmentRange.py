@@ -17,6 +17,9 @@ class SegmentPosition:
     def position(self, value):
         self._position_in_run = value
 
+    def duplicate(self):
+        return SegmentPosition(self._run_index, self._position_in_run)
+
 class SegmentRange:
     def __init__(self, fro:SegmentPosition, into:SegmentPosition):
         self.fro = fro
@@ -37,3 +40,6 @@ class SegmentRange:
         if (self.fro.index != self.into.index):
             return -1
         return self.into.position - self.fro.position + 1
+
+    def duplicate(self):
+        return SegmentRange(self.fro, self.into)

@@ -6,27 +6,34 @@ class Substring:
     start: int
     length: int
 
+    def __init__(self, start: int, length: int):
+        self.start = start
+        self.length = length
+
+@dataclass
 class AlignedSubstring:
-    def __init__(self, source=None, target=None, score=0, length=0):
-        if isinstance(source, Substring) and isinstance(target, Substring):
-            self.source = source
-            self.target = target
-            self.score = score
-            self.length = length
-        elif isinstance(source, int) and isinstance(target, int):
-            self.source = Substring(source, score)
-            self.target = Substring(target, length)
-            self.score = score
-            self.length = length
-        else:
-            self.source = Substring(source[0], source[1])
-            self.target = Substring(target[0], target[1])
-            self.score = score
-            self.length = length
+    source: Substring
+    target: Substring
+    score: int = 0
+    length: int = 0
+
+    def __init__(self,
+                 source,
+                 target,
+                 score=0,
+                 length=0):
+        self.source = source
+        self.target = target
+        self.score = score
+        self.length = length
+
+    @staticmethod
+    def create6i(source_pos:int, source_len:int, target_pos:int, target_len:int, score:int, length:int):
+        return AlignedSubstring(Substring(source_pos, source_len), Substring(target_pos, target_len), score, length)
 
     def __str__(self):
-        return f"({self.source.start},{self.source.start + self.source.length - 1}-{self.target.start},{self.target.start + self.target.length - 1},{self.score})"
-
+        return f"({self.source.start},{self.source.start + self.source.length - 1}," \
+               f"{self.target.start},{self.target.start + self.target.length - 1},{self.score})"
 
 class SequenceAlignmentComputer:
     class Operation:
@@ -117,7 +124,7 @@ class SequenceAlignmentComputer:
                         self._table[i][j].back_j = j - 1
                         self._table[i][j].op = SequenceAlignmentComputer.Operation.SKIP
 
-                max_score = max(self._table[i - 1][j - 1].ul_max_score, self._table[i - 1][j].ul_max_score, self._table[i][j - 1].ul_max_score)
+                max_score = max(self._table[i][j].score, self._table[i - 1][j - 1].ul_max_score, self._table[i - 1][j].ul_max_score, self._table[i][j - 1].ul_max_score)
                 self._table[i][j].ul_max_score = max_score
 
     def compute_maxima_for_coverage(self, maxima, upto_source, upto_target, may_skip, blocked):
@@ -156,6 +163,7 @@ class SequenceAlignmentComputer:
                         maxima.append((i, j))
                     elif self._table[i][j].score > 0 and self._table[i][j].score == global_max:
                         maxima.append((i, j))
+        return global_max
 
     def compute_maxima_for_lcs(self, maxima, upto_source, upto_target):
         maxima.clear()
@@ -165,7 +173,8 @@ class SequenceAlignmentComputer:
                 for j in range(upto_target, 0, -1):
                     if self._table[i][j].score == global_max:
                         maxima.append((i, j))
-                        return
+                        return global_max
+        return global_max
 
     def compute(self, upto_source=None, upto_target=None):
         if upto_source is None:
@@ -191,14 +200,15 @@ class SequenceAlignmentComputer:
         if self._max_items != 1:
             array = [[False] * (len(self._target) + 1) for _ in range(len(self._source) + 1)]
 
-        while list2:
-            score = None
+        first = True
+        while first or (len(list2) > 0 and (self._max_items == 0 or len(list_) < self._max_items)):
+            first = False
             if self._max_items != 1:
-                self.compute_maxima_for_coverage(list2, upto_source, upto_target, may_skip, array)
+                score = self.compute_maxima_for_coverage(list2, upto_source, upto_target, may_skip, array)
             else:
-                self.compute_maxima_for_lcs(list2, upto_source, upto_target)
+                score = self.compute_maxima_for_lcs(list2, upto_source, upto_target)
 
-            if list2:
+            if len(list2) > 0:
                 list3 = []
                 for pair in list2:
                     num, num2 = pair
@@ -210,7 +220,7 @@ class SequenceAlignmentComputer:
                         num = cell.back_i
                         num2 = cell.back_j
 
-                    item = (num, pair[0] - num, num2, pair[1] - num2, score, num3)
+                    item = AlignedSubstring.create6i(num, pair[0] - num, num2, pair[1] - num2, score, num3)
                     if num3 >= self._min_length:
                         list3.append(item)
 

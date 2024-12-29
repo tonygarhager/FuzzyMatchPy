@@ -45,7 +45,7 @@ class TermFinder:
                             list(token.text), list(token2.text), 0, scorer, None
                         )
                         if aligned_substrings:
-                            num2 = sum(len(x) for x in aligned_substrings)
+                            num2 = sum(x.length for x in aligned_substrings)
                             if num2 != 0:
                                 num3 = 2.0 * num2 / (len(token.text) + len(token2.text))
                                 if num3 >= 0.7:
@@ -121,12 +121,12 @@ class TermFinder:
             source = list(search_string)
             target = list(matched_string)
 
-            lcs = sequence_alignment_computer.compute_longest_common_subsequence(source, target, 1, scorer, None)
+            lcs = SequenceAlignmentComputer.compute_longest_common_subsequence(source, target, 1, scorer, None)
             lcs_length = sum(substring.length for substring in lcs)
 
             weight = 1.0
             if flag and lcs_length > 0:
-                lcs_no_width_norm = sequence_alignment_computer.compute_longest_common_subsequence(
+                lcs_no_width_norm = SequenceAlignmentComputer.compute_longest_common_subsequence(
                     source, target, 1, scorer_no_width_norm, None
                 )
                 weighted_score = sum(substring.score for substring in lcs)
@@ -152,3 +152,40 @@ class TermFinder:
             term_finder_result.score = max(avg_score, match_score)
 
         return term_finder_result
+
+    @staticmethod
+    def get_previous_word_token_index(tokens:[], current_token_index:int) -> int:
+        """
+            Finds the index of the previous token that is a word.
+
+            :param tokens: A list of Token objects.
+            :param current_token_index: The current token index to start searching from.
+            :return: The index of the previous word token, or -1 if none is found.
+            """
+        for i in range(current_token_index - 1, -1, -1):
+            if tokens[i].is_word:  # Assuming the Token class has an attribute or method `is_word`
+                return i
+        return -1
+
+    @staticmethod
+    def remove_token_duplicates(trg_concat:str, lcs:[]):
+        if lcs is None:
+            raise Exception('lcs is null')
+        if len(lcs) == 0:
+            raise Exception('lcs is empty')
+
+        dictionary = {}
+        str_prefix = trg_concat[:lcs[0].target.start]
+        text = trg_concat[lcs[0].target.start:lcs[0].target.start + lcs[0].target.length]
+        str_suffix = trg_concat[lcs[0].target.start + lcs[0].target.length:]
+
+        for text_segment in (str_prefix + str_suffix).split("~"):
+            if text_segment not in text and text_segment not in dictionary and text_segment != "#":
+                dictionary[text_segment] = 0
+
+        if len(dictionary) > 0:
+            total_length = len(text) + sum(len(key) for key in dictionary.keys()) + len(dictionary)
+            return total_length
+
+        return len(text)
+
