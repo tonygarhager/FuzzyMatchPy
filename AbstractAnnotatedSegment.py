@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 from typing import List
 from typing import Tuple
 from pyexpat import features
+
+from StringUtils import StringUtils
+from Token import TokenType
 from TokenizerHelper import TokenizerHelper
 from Segment import Segment
 from LanguageTools import LanguageTools, FeatureVectorType
@@ -18,6 +21,7 @@ class IAnnotatedSegment(ABC):
         pass
 
 class AbstractAnnotatedSegment(IAnnotatedSegment):
+    IGNORE_WHITESPACE_IN_STRICT_IDENTITY_STRING = False
     def __init__(self, s: Segment, keep_tokens:bool, keep_peripheral_whitespace:bool):
         self._identity_string:str = None
         self._strict_identity_string:str = None
@@ -31,7 +35,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
         self._concordance_feature_vector: List[int] = None
 
     @property
-    def lingua_language_tool(self) -> LanguageTools:
+    def lingua_language_tools(self) -> LanguageTools:
         pass
 
     @property
@@ -66,19 +70,19 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
 
     def compute_feature_vector(self, type:int, sort_and_unique:bool, feature_to_range_mapping:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
         list = None
-        self.lingua_language_tool.stem(self.segment)
+        self.lingua_language_tools.stem(self.segment)
         flag = TokenizerHelper.tokenizes_to_words(self.segment.culture_name)
 
         if type == FeatureVectorType.ForTranslationMemory:
             if flag:
-                list, feature_to_range_mapping = self.lingua_language_tool.compute_token_feature_vector(self.segment, True, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tools.compute_token_feature_vector(self.segment, True, sort_and_unique, feature_to_range_mapping)
             else:
-                list, feature_to_range_mapping = self.lingua_language_tool.compute_char_feature_vector(type, self.segment, 3, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tools.compute_char_feature_vector(type, self.segment, 3, sort_and_unique, feature_to_range_mapping)
         elif type == FeatureVectorType.ForConcordance:
             if flag:
-                list, feature_to_range_mapping = self.lingua_language_tool.compute_char_feature_vector(type, self.segment, 2, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tools.compute_char_feature_vector(type, self.segment, 2, sort_and_unique, feature_to_range_mapping)
             else:
-                list, feature_to_range_mapping = self.lingua_language_tool.compute_char_feature_vector(type, self.segment, 1, sort_and_unique, feature_to_range_mapping)
+                list, feature_to_range_mapping = self.lingua_language_tools.compute_char_feature_vector(type, self.segment, 1, sort_and_unique, feature_to_range_mapping)
 
         if sort_and_unique and list is not None:
             list.sort()
@@ -91,7 +95,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
         if self._identity_string is not None:
             return self._identity_string
         list: List[SegmentRange] = None
-        self._identity_string, list = self.lingua_language_tool.compute_identity_string(self.segment, LanguageTools.TokenToFeatureMappingMode.Stem, list)
+        self._identity_string, list = self.lingua_language_tools.compute_identity_string(self.segment, LanguageTools.TokenToFeatureMappingMode.Stem, list)
         return self._identity_string
 
     @staticmethod
@@ -139,6 +143,63 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
     @property
     def hash(self):
         return Hash.get_hash_code_long(self.identity_string)
+
+    @abstractmethod
+    def get_lingua_language_tools(self):
+        pass
+
+    @property
+    def lingua_language_tools(self) -> LanguageTools:
+        return self.get_lingua_language_tools()
+
+    def compute_strict_identity_string(self, segment):
+        self.lingua_language_tools.ensure_tokenized_segment(segment)
+        result = []
+
+        for token in segment.tokens:
+            text = None
+
+            if token.type in {
+                TokenType.Unknown,
+                TokenType.Word,
+                TokenType.Abbreviation,
+                TokenType.CharSequence,
+                TokenType.GeneralPunctuation,
+                TokenType.OpeningPunctuation,
+                TokenType.ClosingPunctuation,
+                TokenType.Uri
+            }:
+                text = StringUtils.escape_fn(token.text)
+
+            elif token.type in {
+                TokenType.Date,
+                TokenType.Time,
+                TokenType.Variable,
+                TokenType.Number,
+                TokenType.Measurement,
+                TokenType.Acronym,
+                TokenType.UserDefined,
+                TokenType.AlphaNumeric
+            }:
+                text = f"\\{chr(61696 + token.type)}"
+
+            elif token.type == TokenType.Whitespace:
+                if not AbstractAnnotatedSegment.IGNORE_WHITESPACE_IN_STRICT_IDENTITY_STRING:
+                    text = StringUtils.escape_fn(token.text)
+
+            elif token.type == TokenType.OtherTextPlaceable:
+                if token.is_substitutable:
+                    text = f"\\{chr(61696 + token.type)}"
+                else:
+                    text = StringUtils.escape_fn(token.text)
+
+            elif token.type == TokenType.Tag:
+                text = "\\"
+
+            if text is not None:
+                result.append(text)
+
+        return "".join(result)
 
 
 

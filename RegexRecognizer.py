@@ -88,7 +88,7 @@ class RegexRecognizer(Recognizer, IRecognizerTextFilter):
 class EmailRecognizer(RegexRecognizer):
     def __init__(self, settings, priority, culture):
         super().__init__(settings, TokenType.OtherTextPlaceable, priority, "EMAIL", "DEFAULT_URI_REGOCNIZER", True, culture)
-        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'#r"(mailto:)?(?!\\.)[^\\s@\\\\\\(\\);:<>\\[\\],\\\"]+@((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.(((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.)*((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}]){2,}"
+        email_pattern = r'(mailto:)?(?!\\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'#r"(mailto:)?(?!\\.)[^\\s@\\\\\\(\\);:<>\\[\\],\\\"]+@((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.(((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.)*((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}]){2,}"
         self.add(email_pattern, None, True)
 
     def exclude_text(self, s:str)->bool:

@@ -10,8 +10,7 @@ class AnnotatedSegment(AbstractAnnotatedSegment):
         super().__init__(s, keep_tokens, keep_peripheral_whitespace)
         self._tools = tm.target_tools if is_target_segment else tm.source_tools
 
-    @property
-    def lingua_language_tool(self) -> LanguageTools:
+    def get_lingua_language_tools(self):
         return self._tools
 
 

@@ -266,6 +266,9 @@ class StringUtils:
         StringUtils.base_chars[c] = normalized_char
 
         return normalized_char
+    @staticmethod
+    def escape_fn(c):
+        return c.replace('\\', '\\\\')
 
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True
