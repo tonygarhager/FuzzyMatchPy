@@ -323,7 +323,7 @@ class FileBasedTranslationMemory:
     def set_search_parameters(self):
         return FileBasedTranslationMemory.set_search_parameters_static(self.settings)
 
-    def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit):
+    def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit) -> SearchResults:
         self.settings = settings
         anno_tm = self.get_annotated_translation_memory(self.tm.id)
         self.anno_tm = anno_tm
@@ -398,10 +398,10 @@ class FileBasedTranslationMemory:
         # Check if SortSpecification is not None and contains sort criteria
         if self.settings.sort_spec and len(self.settings.sort_spec) > 0 and len(search_results.results) > 1:
             # Perform sorting based on SortSpecification
-            search_results.results.sort(key=self._get_sort_key(self.settings.sort_spec))
+            search_results.sort(self.settings.sort_spec)
         else:
             # Perform default sorting
-            search_results.results.sort(key=self._get_sort_key(self._DefaultSortOrder))
+            search_results.sort(self._default_sort_order)
 
         # Cap the results at the maximum allowed number
         if len(search_results.results) > self.settings.max_results:
@@ -873,7 +873,7 @@ class FileBasedTranslationMemory:
         sorted_list = SortedDict()
         for i in range(len(results.results)):
             search_result = results.results[i]
-            sorted_list[search_result.memory_translation_unit.id] = True
+            sorted_list[search_result.memory_translation_unit.resource_id.id] = True
 
         for translation_unit in tus:
             last_tuid, last_change_date, skip_rows = FileBasedTranslationMemory.set_last_tuid(translation_unit, last_tuid, last_change_date, order_descending, skip_rows)
@@ -905,7 +905,7 @@ class FileBasedTranslationMemory:
                         if search_result2.scoring_result.match >= self.settings.min_score and (self.settings.mode != SearchMode.ExactSearch or search_result2.scoring_result.is_exact_match):
                             search_result2.context_data = TuContext(translation_unit.source.hash, translation_unit.target.hash)
                             results.results.append(search_result2)
-                            sorted_list[search_result2.memory_translation_unit.id] = True
+                            sorted_list[search_result2.memory_translation_unit.resource_id.id] = True
                             num += 1
                             if search_result2.scoring_result.is_exact_match:
                                 flag = True

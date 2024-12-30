@@ -84,10 +84,11 @@ class TradosHandler:
 def main(args):
     # Example Usage
     path = "test/test.sdltm"
-    source_segment = "Our Belief"
+    query = "Our Belief is"
 
     helper = FileBasedTMHelper()
-    helper.fuzzy_search(path, source_segment, 5, 70)
+    results = helper.fuzzy_search(path, query, 5, 70)
+
 
     #ftm = FileBasedTranslationMemory(path)
     #tu = TranslationUnit(ftm.tm.languageDirection['srcLang'], ftm.tm.languageDirection['trgLang'])

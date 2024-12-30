@@ -1,11 +1,14 @@
 from SortSpecification import *
 from typing import List
+
+from Sorter_T import Sorter_T
 from TranslationUnit import *
 from typing import Callable
 from ScoringResult import *
 from Placeable import *
 from datetime import datetime
 from TuContext import *
+from functools import cmp_to_key
 
 class SearchResult:
     def __init__(self, tm_tu:TranslationUnit):
@@ -33,18 +36,15 @@ class SearchResults:
     def get_default_sort_order() -> SortSpecification:
         return SortSpecification(SearchResults.default_sort_order)
 
-    def sort(self, sort_order:SortSpecification):
-        self.sort2(sort_order, None)
-
-    def sort2(self, sort_order:SortSpecification, disambiguator:Callable[[SearchResult, SearchResult], int]) -> None:
+    def sort(self, sort_order:SortSpecification, disambiguator:Callable[[SearchResult, SearchResult], int] = None) -> None:
         self.sort_order = sort_order or SearchResults.get_default_sort_order()
 
         if not self.results or len(self.results) < 2 or len(self.sort_order) == 0:
             return
 
         comparer = SearchResultFieldValueComparer()
-        #mod
-        self.results.sort()
+        comparer2 = Sorter_T(comparer, self.sort_order)
+        self.results.sort(key=cmp_to_key(comparer2.compare))
 
     def sort_by_order(self, sort_order:str) -> None:
         if not sort_order or len(sort_order) == 0:
