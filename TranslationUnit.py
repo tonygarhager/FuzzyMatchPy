@@ -35,6 +35,8 @@ class TranslationUnit:
         self.src_segment:Segment = _src_segment
         self.trg_segment:Segment = _tgr_segment
         self.system_fields:SystemFields = SystemFields()
+        self.origin = TranslationUnitOrigin.Unknown#plmod set
+        self.confirmation_level = ConfirmationLevel.Unspecified#plmod set
 
     @staticmethod
     def get_alignable_tags(segment):

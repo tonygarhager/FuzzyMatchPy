@@ -2,6 +2,7 @@ from AnnotatedSegment import AnnotatedSegment
 from AnnotatedTranslationMemory import AnnotatedTranslationMemory
 from CultureInfoExtensions import CultureInfoExtensions
 from LanguageTools import LanguageTools
+from Penalty import PenaltyType
 from ScoringResult import ScoringResult, TextContextMatch
 from SearchResults import SearchResult
 from SearchSettings import SearchSettings, SearchMode
@@ -15,6 +16,7 @@ from Token import Token
 from Tokenizer import Tokenizer
 from TokenizerHelper import TokenizerHelper
 from TokenizerSetup import TokenizerSetupFactory
+from TranslationUnit import TranslationUnitOrigin, ConfirmationLevel
 from TuContext import TuContextData
 
 class FuzzyIndexes:
@@ -130,7 +132,59 @@ class AbstractScorer(ABC):
         self.apply_penalties(search_result, char_width_difference)
 
     def apply_penalties(self, search_result:SearchResult, char_width_difference:bool):
-        pass#mod
+        if char_width_difference:
+            self.apply_char_width_penalty(search_result)
+        self.apply_filter_penalties(search_result)
+        self.apply_provider_penalty(search_result)
+        self.apply_alignment_penalty(search_result)
+        self.apply_confirm_level_penalties(search_result)
+
+    def apply_alignment_penalty(self, search_result:SearchResult):
+        penalty = self.settings.find_penalty(PenaltyType.Alignment)
+        if penalty is None:
+            return
+        if (search_result.memory_translation_unit.origin != TranslationUnitOrigin.Alignment or
+            search_result.memory_translation_unit.system_fields.creation_date != search_result.memory_translation_unit.system_fields.change_date):
+            return
+        if penalty.malus > 0:
+            search_result.scoring_result.apply_penalty(penalty)
+
+    def apply_confirm_level_penalty(self, search_result:SearchResult, confirmation_level:ConfirmationLevel, pt:PenaltyType):
+        penalty = self.settings.find_penalty(pt)
+        if (penalty is not None and
+            penalty.malus > 0 and
+            search_result.memory_translation_unit.confirmation_level == confirmation_level):
+            search_result.scoring_result.apply_penalty(penalty)
+
+    def apply_confirm_level_penalties(self, search_result:SearchResult):
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Unspecified, PenaltyType.NotTranslated)
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Draft, PenaltyType.Draft);
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Translated, PenaltyType.Translated);
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.ApprovedSignOff, PenaltyType.ApprovedSignOff);
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.ApprovedTranslation, PenaltyType.ApprovedTranslation);
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.RejectedTranslation, PenaltyType.RejectedTranslation);
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.RejectedSignOff, PenaltyType.RejectedSignOff);
+
+    def apply_provider_penalty(self, search_result:SearchResult):
+        penalty = self.settings.find_penalty(PenaltyType.ProviderPenalty)
+        if penalty is None:
+            return
+        if penalty.malus > 0:
+            search_result.scoring_result.apply_penalty(penalty)
+
+    def apply_char_width_penalty(self, search_result:SearchResult):
+        penalty = self.settings.find_penalty(PenaltyType.CharacterWidthDifference)
+        if penalty is None:
+            return
+        if penalty.malus > 0:
+            search_result.scoring_result.apply_penalty(penalty)
+
+    def apply_filter_penalties(self, search_result:SearchResult):
+        scoring_result = search_result.scoring_result
+        if self.settings.filters is None:
+            return
+        #plmod
+        return
 
     def get_concordance_score(self, search_result:SearchResult, doc_src_segment:AnnotatedSegment, doc_tgt_segment:AnnotatedSegment):
         if self.settings.mode == SearchMode.ConcordanceSearch:

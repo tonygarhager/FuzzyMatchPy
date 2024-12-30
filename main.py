@@ -109,15 +109,6 @@ def main(args):
         json.dump(json_res, json_file, indent=4)
 
     print('Saved to result.json')
-        #ftm = FileBasedTranslationMemory(path)
-    #tu = TranslationUnit(ftm.tm.languageDirection['srcLang'], ftm.tm.languageDirection['trgLang'])
-    #search_setting = get_search_setting(False, 5, 70)
-    #ftm.search_translation_unit(search_setting, tu)
-    #trados_handler = TradosHandler(tmx_path)
-    #match_result = trados_handler.fuzzy_match(source_segment)
-
-
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script for default arguments.")

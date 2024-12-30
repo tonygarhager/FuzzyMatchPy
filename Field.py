@@ -453,7 +453,6 @@ class MultipleStringFieldValue(FieldValue):
     def add(self, v: str) -> bool:
         if self._values is None:
             self._values = set()
-        # Add v to the set (case insensitive)
         return self._values.add(v.lower()) is None
 
     def has_value(self, v: str) -> bool:
