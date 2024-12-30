@@ -140,6 +140,26 @@ class StringUtils:
                 (0xAC00 <= char_code <= 0xD7AF):
             return True
         return False
+    @staticmethod
+    def is_cjk_punctuation(c: str) -> bool:
+        """
+        Checks if a character is a CJK punctuation character.
+
+        Args:
+            c (str): A single character to check.
+
+        Returns:
+            bool: True if the character is CJK punctuation, False otherwise.
+        """
+        return (
+                ('\u3001' <= c <= '\u303F') or
+                ('\u30FB' <= c <= '\u30FE') or
+                ('\u3200' <= c <= '\u32FF') or
+                ('\uFF01' <= c <= '\uFF0F') or
+                ('\uFF1A' <= c <= '\uFF20') or
+                ('\uFF3B' <= c <= '\uFF3D') or
+                ('\uFF5B' <= c <= '\uFF5C')
+        )
 
     @staticmethod
     def half_width_to_full_width(input_str):

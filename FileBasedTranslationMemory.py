@@ -1,19 +1,9 @@
 import sqlite3
-from datetime import datetime
-from uuid import UUID
-
-from AnnotatedSegment import AnnotatedSegment
 from AnnotatedTranslationUnit import AnnotatedTranslationUnit
-from StringUtils import StringUtils
 from BooleanSettingsWrapper import BooleanSettingsWrapper
 from TranslationMemory import *
 from Resource import Resource
-from DefaultFallbackRecognizer import DefaultFallbackRecognizer
-from typing import List
-from SearchSettings import *
 from SearchResults import *
-from LanguageResources import *
-from AnnotatedTranslationMemory import AnnotatedTranslationMemory
 from WordCounts import *
 from FuzzySearcher import *
 from StoTranslationUnit import *
@@ -198,12 +188,23 @@ class FileBasedTranslationMemory:
         if text == '8.05':
             self.cursor.execute('ALTER TABLE translation_memories ADD COLUMN flags INT NOT NULL DEFAULT 0')
             self.cursor.execute('ALTER TABLE translation_memories ADD COLUMN tucount INT NOT NULL DEFAULT 0')
-            self._updateTuCounts()
+            self.update_tu_counts()
             self._setParameter('VERSION', '8.06')
             flag = True
 
         if flag == False:
             raise ('ErrorCode.StorageVersionDataOutdated')
+
+    def update_tu_counts(self):
+        query = 'SELECT translation_memory_id, count(*) FROM translation_units GROUP BY translation_memory_id'
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        for row in rows:
+            tmid = int(row[0])
+            tucount = int(row[1])
+            query = 'UPDATE translation_memories SET tucount = ' + str(tucount) + ' WHERE id = ' + str(tmid)
+            self.cursor.execute(query)
+
 
     # SqliteStorage::GetAlignmentDataColspec()
     def get_alignment_data_colspec(self):
@@ -603,89 +604,6 @@ class FileBasedTranslationMemory:
         #    return self.read_tu_no_flags(row)
         return self.read_tu_with_flags(row)
 
-    def read_attribute_values(self, reader, tus, tu_index, auto_advance_result_set, attributes=None):
-        if attributes is None:
-            attributes = {}
-
-        list_ = []
-        list2 = []
-
-        while True:
-            obj = None
-            num = 0
-            num2 = 0
-            name = None
-            num3 = 0
-
-            while reader.read():
-                num4 = 0
-                flag = reader.field_count == 5
-                int_val = self.get_int32(reader, num4)
-                num4 += 1
-                int2 = self.get_int32(reader, num4)
-                num4 += 1
-
-                if flag:
-                    text = reader.get_string(num4)
-                    num4 += 1
-                    num5 = self.get_int32(reader, num4)
-                else:
-                    if int2 not in attributes:
-                        raise Exception("Invalid attribute ID")
-
-                    attribute_declaration = attributes[int2]
-                    text = attribute_declaration.name
-                    num5 = int(attribute_declaration.type)
-
-                if (int_val != num and num != 0) or (int2 != num2 and num2 != 0):
-                    if num in tu_index:
-                        translation_unit = tus[tu_index[num]]
-                        if num3 != 2:
-                            if num3 == 5:
-                                translation_unit.attributes.append(
-                                    AttributeValue(num2, name, FieldValueType(num3), list2))
-                            else:
-                                translation_unit.attributes.append(
-                                    AttributeValue(num2, name, FieldValueType(num3), obj))
-                        else:
-                            list_.sort()
-                            translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), list_))
-
-                    list2.clear()
-                    list_.clear()
-
-                if num5 == 2:
-                    list_.append(reader.get_string(num4))
-                elif num5 == 3:
-                    obj = self.get_datetime(reader, num4)
-                elif num5 == 4:
-                    obj = reader.get_value(num4)
-                    if isinstance(obj, (decimal, long)):
-                        obj = self.get_int32(reader, num4)
-                elif num5 == 5:
-                    list2.append(self.get_int32(reader, num4))
-
-                num4 += 1
-                num2 = int2
-                name = text
-                num3 = num5
-                num = int_val
-
-            if num2 != 0:
-                if num in tu_index:
-                    translation_unit = tus[tu_index[num]]
-                    if num3 != 2:
-                        if num3 == 5:
-                            translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), list2))
-                        else:
-                            translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), obj))
-                    else:
-                        list_.sort()
-                        translation_unit.attributes.append(AttributeValue(num2, name, FieldValueType(num3), list_))
-
-            if not auto_advance_result_set or not reader.next_result():
-                return
-
     def get_tu_set(self, command, count: int, tu_context_data: TuContextData):
         list_of_tus = []
         dictionary = {}
@@ -749,7 +667,6 @@ class FileBasedTranslationMemory:
         query = query.replace('(0)', '(' + ids_str + ')')
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        #read_attribute_values(rows, list_of_tus, dictionary, True, None)  # Assuming read_attribute_values processes the rows
 
         # Process Text Context if available
         if tu_context_data.text_context and tu_context_data.text_context.context1 != -1:
@@ -761,7 +678,7 @@ class FileBasedTranslationMemory:
                 """
             self.cursor.execute(query)
             rows = self.cursor.fetchall()
-            read_text_contexts(rows, list_of_tus, dictionary)  # Assuming read_text_contexts processes the rows
+            #plmodread_text_contexts(rows, list_of_tus, dictionary)  # Assuming read_text_contexts processes the rows
 
         # Process ID Context if available
         if tu_context_data.id_context:
@@ -773,7 +690,7 @@ class FileBasedTranslationMemory:
                 """
             self.cursor.execute(query)
             rows = self.cursor.fetchall()
-            read_id_contexts(rows, list_of_tus, dictionary)  # Assuming read_id_contexts processes the rows
+            #plmodread_id_contexts(rows, list_of_tus, dictionary)  # Assuming read_id_contexts processes the rows
 
         return list_of_tus
 

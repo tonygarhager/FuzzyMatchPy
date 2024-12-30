@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
 from typing import Tuple
-from pyexpat import features
 
 from StringUtils import StringUtils
 from Token import TokenType

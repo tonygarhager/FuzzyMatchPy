@@ -140,6 +140,31 @@ class DefaultFallbackRecognizer(Recognizer):
         token.culture_name = self.culture_name
         return token, consumed_length
 
+class DefaultJAZHFallbackRecognizer(DefaultFallbackRecognizer):
+    def __init__(self, settings:RecognizerSettings, t:TokenType, priority:int, culture_name:str, accessor):
+        super().__init__(settings, t, priority, culture_name, accessor)
+        self._is_fallback_recognizer = True
+
+    def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        if s is None or len(s) == 0 or from_idx >= len(s):
+            return None, consumed_length
+        consumed_length = 0
+        if StringUtils.is_cjk_punctuation(s[from_idx]):
+            if from_idx < len(s) and StringUtils.is_cjk_punctuation(s[from_idx]):
+                consumed_length += 1
+            token = SimpleToken(s[from_idx:from_idx+consumed_length], TokenType.GeneralPunctuation)
+            token.culture_name = self.culture_name
+            return token, consumed_length
+        if StringUtils.is_cjk_char(s[from_idx]) == False:
+            return super().recognize(s, from_idx, allow_token_bundles, consumed_length)
+        if from_idx < len(s) and StringUtils.is_cjk_char(s[from_idx]):
+            consumed_length += 1
+        token = SimpleToken(s[from_idx:from_idx + consumed_length], TokenType.CharSequence)
+        token.culture_name = self.culture_name
+        return token, consumed_length
+
+
+
 
 
 

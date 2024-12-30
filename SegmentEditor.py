@@ -135,7 +135,7 @@ class SegmentEditor:
                 if text is None:
                     return False
 
-                new_value = text.value[:token4.span.into_position + 1] + new_text + text.value[len(new_value):]
+                new_value = ''#plmodtext.value[:token4.span.into_position + 1] + new_text + text.value[len(new_value):]
                 text.value = new_value
                 num3 = token4.span.into_position + 1
                 for token in tokens:
