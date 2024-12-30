@@ -91,7 +91,7 @@ class LanguageTools:
                     text = token.text.lower()
             elif token.type == TokenType.OtherTextPlaceable:
                 if isinstance(token, SimpleToken):
-                    if token.is_substitutable():
+                    if token.is_substitutable:
                         if mode == LanguageTools.TokenToFeatureMappingMode.Stem:
                             text = chr(61696 + token.type)
                         else:

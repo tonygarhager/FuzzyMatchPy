@@ -64,15 +64,15 @@ class RegexRecognizer(Recognizer, IRecognizerTextFilter):
             if first is None or from_idx >= len(s) or first.contains(s[from_idx]):
                 match = regex.match(s, from_idx)
                 if match and self.verify_context_constraints(s, match.end(), None):
-                    new_token = self.create_token(match.group(), match.groups())
-                    if new_token and len(match.group()) > 0:
-                        if len(match.group()) > max_length or token is None or \
+                    new_token = self.create_token(match.string)
+                    if new_token and len(match.string) > 0:
+                        if len(match.string) > max_length or token is None or \
                                 (
-                                        len(match.group()) == max_length and pattern.priority > max_priority and not allow_token_bundles):
-                            max_length = len(match.group())
+                                        len(match.string) == max_length and pattern.priority > max_priority and not allow_token_bundles):
+                            max_length = len(match.string)
                             token = new_token
                             max_priority = pattern.priority
-                        elif allow_token_bundles and len(match.group()) == max_length:
+                        elif allow_token_bundles and len(match.string) == max_length:
                             if not isinstance(token, list):
                                 token = [token]
                             token.append(new_token)
@@ -88,7 +88,7 @@ class RegexRecognizer(Recognizer, IRecognizerTextFilter):
 class EmailRecognizer(RegexRecognizer):
     def __init__(self, settings, priority, culture):
         super().__init__(settings, TokenType.OtherTextPlaceable, priority, "EMAIL", "DEFAULT_URI_REGOCNIZER", True, culture)
-        email_pattern = r"(mailto:)?(?!\\.)[^\\s@\\\\\\(\\);:<>\\[\\],\\\"]+@((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.(((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.)*((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}]){2,}"
+        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'#r"(mailto:)?(?!\\.)[^\\s@\\\\\\(\\);:<>\\[\\],\\\"]+@((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.(((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}])+\\.)*((?![\\\"<>\\[\\]])[\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{S}]){2,}"
         self.add(email_pattern, None, True)
 
     def exclude_text(self, s:str)->bool:
@@ -97,7 +97,7 @@ class EmailRecognizer(RegexRecognizer):
         return s.find('@') == -1
 
     def recognize(self, s, from_index, allow_token_bundles, consumed_length):
-        token = super().recognize(s, from_index, allow_token_bundles, consumed_length)
+        token, consumed_length = super().recognize(s, from_index, allow_token_bundles, consumed_length)
         if token:
             try:
                 text = token.text.lower()
@@ -106,7 +106,7 @@ class EmailRecognizer(RegexRecognizer):
                 mail_address = parseaddr(text)[1]
                 if mail_address:
                     token.text = mail_address
-                    return token
+                    return token, consumed_length
             except ValueError:
                 pass
-        return None
+        return None, consumed_length
