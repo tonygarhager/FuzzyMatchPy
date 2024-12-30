@@ -13,6 +13,67 @@ class LPNLSVERSIONINFO(ctypes.Structure):
         ("dwNLSVersion", wintypes.DWORD),         # Version of the NLS data
         ("dwDefinedVersion", wintypes.DWORD),     # Defined version of the NLS data
     ]
+class UnicodeCategory(Enum):
+    # Uppercase letter
+    UppercaseLetter = 0
+    # Lowercase letter
+    LowercaseLetter = 1
+    # Titlecase letter
+    TitlecaseLetter = 2
+    # Modifier letter character
+    ModifierLetter = 3
+    # Other letter
+    OtherLetter = 4
+    # Nonspacing mark
+    NonSpacingMark = 5
+    # Spacing combining mark
+    SpacingCombiningMark = 6
+    # Enclosing mark
+    EnclosingMark = 7
+    # Decimal digit number
+    DecimalDigitNumber = 8
+    # Letter number
+    LetterNumber = 9
+    # Other number
+    OtherNumber = 10
+    # Space separator
+    SpaceSeparator = 11
+    # Line separator
+    LineSeparator = 12
+    # Paragraph separator
+    ParagraphSeparator = 13
+    # Control character
+    Control = 14
+    # Format character
+    Format = 15
+    # Surrogate character
+    Surrogate = 16
+    # Private-use character
+    PrivateUse = 17
+    # Connector punctuation
+    ConnectorPunctuation = 18
+    # Dash punctuation
+    DashPunctuation = 19
+    # Open punctuation
+    OpenPunctuation = 20
+    # Close punctuation
+    ClosePunctuation = 21
+    # Initial quote punctuation
+    InitialQuotePunctuation = 22
+    # Final quote punctuation
+    FinalQuotePunctuation = 23
+    # Other punctuation
+    OtherPunctuation = 24
+    # Mathematical symbol
+    MathSymbol = 25
+    # Currency symbol
+    CurrencySymbol = 26
+    # Modifier symbol
+    ModifierSymbol = 27
+    # Other symbol
+    OtherSymbol = 28
+    # Other not assigned
+    OtherNotAssigned = 29
 
 class UnicodeBlock(Enum):
     Unknown = 0

@@ -189,6 +189,107 @@ class DefaultThaiFallbackRecognizer(DefaultFallbackRecognizer):
         token.culture_name = self.culture_name
         return token, consumed_length
 
+class DefaultKoreanFallbackRecognizer(DefaultFallbackRecognizer):
+    def __init__(self, settings: RecognizerSettings, token_type: TokenType, priority: int, culture: str,
+                 data_accessor):
+        super().__init__(settings, token_type, priority, culture, data_accessor)
+        self._is_fallback_recognizer = True
+
+    def recognize(self, s: str, from_index: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+        consumed_length = 0
+        if not s:
+            return None, consumed_length
+        length = len(s)
+        num = from_index
+        c = s[num]
+
+        if self.is_hard_token_terminator(s, num):
+            consumed_length = 1
+            token = SimpleToken(s[from_index:from_index + consumed_length], TokenType.GeneralPunctuation)
+            token.culture_name = self.culture_name
+            return token, consumed_length
+
+        flag = StringUtils.is_cjk_char(c)
+
+        while (num < length and not self.is_whitespace_or_separator(c) and not self.is_digit(c)
+               and not self.is_hard_token_terminator(s, num)):
+            flag2 = StringUtils.is_cjk_char(c)
+            if flag2 != flag:
+                break
+            num += 1
+            if num < length:
+                c = s[num]
+                flag = flag2
+
+        num2 = num
+        num = from_index
+
+        while num < num2 and self.is_separable_punct(s, num):
+            num += 1
+
+        if num > from_index:
+            consumed_length = num - from_index
+            token = SimpleToken(s[from_index:from_index + consumed_length], TokenType.GeneralPunctuation)
+            token.culture_name = self.culture_name
+            return token, consumed_length
+
+        flag3 = False
+        flag4 = False
+        while not flag4:
+            flag4 = False
+            while num2 - 1 > num and self.is_separable_punct(s, num2 - 1):
+                num2 -= 1
+                flag4 = True
+
+            num3 = 0
+            while num2 - 1 - num3 > num and s[num2 - 1 - num3] == '.':
+                num3 += 1
+            if num3 > 1:
+                num2 -= num3
+                flag4 = True
+            elif num3 == 1:
+                if self.language_resources is None or not self.language_resources.is_abbreviation(s[from_index:num2]):
+                    num2 -= 1
+                    flag4 = True
+                else:
+                    flag3 = True
+
+        consumed_length = num2 - from_index
+        if consumed_length == 0:
+            return None, consumed_length
+
+        token_type = TokenType.Abbreviation if flag3 else TokenType.Word
+        simple_token = SimpleToken(s[from_index:from_index+consumed_length], token_type)
+        simple_token.is_stopword = self.language_resources.is_stopword(simple_token.text)
+        simple_token.culture_name = self.culture_name
+        return simple_token, consumed_length
+
+    @staticmethod
+    def is_separable_punct(s: str, pos: int) -> bool:
+        unicode_category = StringUtils.get_unicode_category(s[pos])
+        return unicode_category in [UnicodeCategory.OpenPunctuation, UnicodeCategory.ClosePunctuation,
+                                    UnicodeCategory.FinalQuotePunctuation, UnicodeCategory.InitialQuotePunctuation,
+                                    UnicodeCategory.MathSymbol, UnicodeCategory.OtherPunctuation]
+
+    @staticmethod
+    def is_hard_token_terminator(s: str, p: int) -> bool:
+        unicode_category = StringUtils.get_unicode_category(s[p])
+        if unicode_category in [UnicodeCategory.SpaceSeparator, UnicodeCategory.ParagraphSeparator,
+                                UnicodeCategory.LineSeparator, UnicodeCategory.OpenPunctuation,
+                                UnicodeCategory.ClosePunctuation, UnicodeCategory.FinalQuotePunctuation,
+                                UnicodeCategory.InitialQuotePunctuation, UnicodeCategory.MathSymbol]:
+            return True
+        c = s[p]
+        return c in ['/', '\\', ':', ';', '-', '–', "'"]
+
+    @staticmethod
+    def is_whitespace_or_separator(c: str) -> bool:
+        return c in [' ', '\t', '\n', '\r', '\v', '\f']
+
+    @staticmethod
+    def is_digit(c: str) -> bool:
+        return c.isdigit()
+
 
 
 
