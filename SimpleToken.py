@@ -51,6 +51,9 @@ class SimpleToken(Token):
     def set_token_type(self, type:TokenType):
         self._type = type
 
+    def __str__(self):
+        return self.text
+
 class GenericPlaceableToken(SimpleToken):
     def __init__(self, text:str, token_class:str, is_subtitutable:bool):
         super().__init__(text, TokenType.OtherTextPlaceable)

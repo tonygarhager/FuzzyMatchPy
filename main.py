@@ -8,7 +8,7 @@ from FileBasedTranslationMemory import FileBasedTranslationMemory
 from TranslationUnit import TranslationUnit
 from SearchSettings import SearchSettings
 from FileBasedTMHelper import FileBasedTMHelper
-
+import json
 import sqlite3
 
 def read_sdltm(file_path):
@@ -83,14 +83,33 @@ class TradosHandler:
 
 def main(args):
     # Example Usage
-    path = "test/test.sdltm"
-    query = "Our Belief is"
+    path = args.tmpath
+    query = args.query
 
     helper = FileBasedTMHelper()
     results = helper.fuzzy_search(path, query, 5, 70)
 
+    json_res = {}
+    i = 1
+    for result in results.results:
+        title = 'result ' + str(i)
+        data = {}
+        data['Match'] = str(result.scoring_result.match)
+        data['SourceTu'] = str(result.memory_translation_unit.src_segment)
+        data['TargetTu'] = str(result.memory_translation_unit.trg_segment)
+        json_res[title] = data
+        i += 1
 
-    #ftm = FileBasedTranslationMemory(path)
+    print(str(json_res))
+
+    file_path = "result.json"
+
+    # Write data to JSON file
+    with open(file_path, "w") as json_file:
+        json.dump(json_res, json_file, indent=4)
+
+    print('Saved to result.json')
+        #ftm = FileBasedTranslationMemory(path)
     #tu = TranslationUnit(ftm.tm.languageDirection['srcLang'], ftm.tm.languageDirection['trgLang'])
     #search_setting = get_search_setting(False, 5, 70)
     #ftm.search_translation_unit(search_setting, tu)
@@ -102,7 +121,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script for default arguments.")
-    parser.add_argument("--sdltm", type=str, default="test/test.sdltm", help="First argument")
+    parser.add_argument("--tmpath", type=str, default="test/test.sdltm", help="First argument")
     parser.add_argument("--query", type=str, default="Our Belief", help="Second argument")
     parser.add_argument("--maxResults", type=int, default=5, help="Second argument")
     parser.add_argument("--minScore", type=int, default=70, help="Second argument")

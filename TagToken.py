@@ -6,7 +6,7 @@ from Token import Token, TokenType
 class TagToken(Token):
     def __init__(self, tag:Tag = None):
         if tag is not None:
-            super().__init__(tag.to_string())
+            super().__init__(str(tag))
         self.tag = tag
 
     def update_value(self, blue_print, update_values_only:bool = False):
@@ -17,10 +17,10 @@ class TagToken(Token):
         if update_values_only:
             self.tag.tagid = blue_print.tag.tagid
             self.tag.text_equivalent = blue_print.tag.text_equivalent
-            self.text = blue_print.to_string()
+            self.text = str(blue_print)
             return
         self.tag = blue_print.tag
-        self.text = blue_print.to_string()
+        self.text = str(blue_print)
 
     def get_token_type(self) -> TokenType:
         return TokenType.Tag
@@ -40,9 +40,9 @@ class TagToken(Token):
             return SegmentElement.Similarity.Non
         return self.tag.get_similarity(other.tag)
 
-    def to_string(self):
+    def __str__(self):
         if self.tag is not None:
-            return self.tag.to_string()
+            return str(self.tag)
         return '(null)'
 
 

@@ -14,6 +14,7 @@ class LPNLSVERSIONINFO(ctypes.Structure):
     ]
 
 class StringUtils:
+    base_chars = {}
     whitespace_characters = ['\t',
 			'\n',
 			'\v',
@@ -249,6 +250,22 @@ class StringUtils:
     @staticmethod
     def is_ja_long_vowel_marker(c:str) -> bool:
         return c == 'ー' or c == 'ｰ'
+
+    @staticmethod
+    def to_base(c):
+        # Check if the character is within the specified Unicode range
+        if '\ud800' <= c <= '':
+            return c
+
+        # Check the BaseChars dictionary for the character
+        if c in StringUtils.base_chars:
+            return StringUtils.base_chars[c]
+
+        # Normalize the character and update the BaseChars dictionary
+        normalized_char = unicodedata.normalize('NFD', c)[0]
+        StringUtils.base_chars[c] = normalized_char
+
+        return normalized_char
 
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True

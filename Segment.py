@@ -1,5 +1,6 @@
+from SegmentRange import SegmentPosition
 from Text import Text
-from typing import Tuple
+from typing import Tuple, List
 from StringUtils import StringUtils
 from TokenBundle import TokenBundle
 from Tag import *
@@ -134,3 +135,34 @@ class Segment:
 
     def is_valid(self):
         return True#mod
+
+    def __str__(self):
+        sb = ''
+        if self.elements is None:
+            return sb
+        for element in self.elements:
+            if element is not None:
+                sb += str(element)
+        return sb
+
+    def to_plain(self, tolower:bool, tobase:bool) -> Tuple[str, List[SegmentPosition]]:
+        sb = ''
+        ranges = []
+        if self.elements is None:
+            return sb, ranges
+        for i in range(len(self.elements)):
+            if self.elements[i] is None or isinstance(self.elements[i], Text) == False:
+                continue
+            text = self.elements[i]
+            value = text.value
+
+            for j in range(len(value)):
+                c = value[j]
+                if tolower:
+                    c = c.lower()
+                if tobase:
+                    c = StringUtils.to_base(c)
+                sb += c
+                ranges.append(SegmentPosition(i, j))
+
+        return sb, ranges

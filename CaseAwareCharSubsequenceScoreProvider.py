@@ -33,8 +33,8 @@ class CaseAwareCharSubsequenceScoreProvider:
             return 1
 
         if self._use_to_base:
-            a = CharacterProperties.to_base(a)
-            b = CharacterProperties.to_base(b)
+            a = StringUtils.to_base(a)
+            b = StringUtils.to_base(b)
             if a == b:
                 return 1
 
@@ -83,12 +83,4 @@ class CaseAwareCharSubsequenceScoreProvider:
         """
         return True
 
-
-# Supporting Classes and Functions (Placeholder)
-class CharacterProperties:
-    @staticmethod
-    def to_base(char):
-        # Placeholder for converting a character to its base form
-        # Replace this with the actual implementation
-        return char
 

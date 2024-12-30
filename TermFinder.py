@@ -20,9 +20,39 @@ class TermFinder:
     @staticmethod
     def find_terms(search_segment:Segment, text_segment:Segment, expect_continuous_match:bool, use_width_normalization:bool) -> TermFinderResult:
         if TokenizerHelper.tokenizes_to_words(search_segment.culture_name) == False:
-            pass#mod
+            return TermFinder.find_terms_char_based(search_segment, text_segment)
         use_character_decomposition = StringUtils.get_iso_language_code(search_segment.culture_name) != 'ko'
         return TermFinder.find_terms_word_based(search_segment, text_segment, expect_continuous_match, use_character_decomposition, use_width_normalization)
+    @staticmethod
+    def find_terms_char_based(search_segment:Segment, text_segment:Segment) -> TermFinderResult:
+        text, list = search_segment.to_plain(True, True)
+        text2, list2 = text_segment.to_plain(True, True)
+
+        if len(text) == 0:
+            return None
+
+        length = len(text)
+        length2 = len(text2)
+        picker = SubstringAlignmentDisambiguator()
+        list3 = SequenceAlignmentComputer.compute_coverage(text, text2, CharSubstringScoreProvider(), picker)
+
+        if list3 is None or len(list3) == 0:
+            return None
+        term_finder_result = TermFinderResult()
+        term_finder_result.matching_ranges = []
+        list4 = []
+        for aligned_substring in list3:
+            if aligned_substring.source.length != aligned_substring.target.length:
+                return None
+            for i in range(aligned_substring.source.length):
+                list4.append(list2[aligned_substring.target.start+i])
+        if len(list4) == 0:
+            return None
+        term_finder_result.matching_ranges = TermFinder.sort_and_melt(list4)
+        num:float = len(list4) / float(length)
+        term_finder_result.score = int(num * 100.0)
+        term_finder_result.score = max(0, min(100, term_finder_result.score))
+        return term_finder_result
 
     @staticmethod
     def compute_token_association_scores(search_segment, text_segment, use_character_decomposition, normalize_widths):

@@ -92,7 +92,7 @@ class Tag(SegmentElement):
                 return SegmentElement.Similarity.IdenticalType
             return SegmentElement.Similarity.IdenticalValueAndType
 
-    def to_string(self):
+    def __str__(self):
         sb = '<'
         if self.type == TagType.End:
             sb += '/'

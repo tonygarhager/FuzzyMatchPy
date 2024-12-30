@@ -24,8 +24,6 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
         if keep_peripheral_whitespace == False:
             self.trimmed_prefix = s.trim_start()
             self.trimmed_suffix = s.trim_end()
-            if not self.trimmed_prefix:
-                pass#mod
         if keep_tokens == False:
             s.tokens = None
         self._segment = s
