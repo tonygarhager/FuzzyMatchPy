@@ -1,5 +1,8 @@
+from functools import cmp_to_key
+
 from CultureInfoExtensions import CultureInfoExtensions
 from Segment import Segment
+from SegmentRange import SegmentPosition, SegmentRange
 from StringUtils import StringUtils
 from TagToken import TagToken
 from TokenizerHelper import TokenizerHelper
@@ -8,6 +11,8 @@ from collections import Counter
 from CaseAwareCharSubsequenceScoreProvider import CaseAwareCharSubsequenceScoreProvider
 from typing import *
 from SequenceAlignmentComputer import *
+from ExtensionDisambiguator import *
+from CharSubstringScoreProvider import CharSubstringScoreProvider
 
 T = TypeVar("T")
 
@@ -54,6 +59,32 @@ class TermFinder:
         term_finder_result.score = max(0, min(100, term_finder_result.score))
         return term_finder_result
 
+    @staticmethod
+    def sort_and_melt_compare(a:SegmentPosition, b:SegmentPosition) -> int:
+        num = a.index - b.index
+        if num == 0:
+            num = a.position - b.position
+        return num
+
+    @staticmethod
+    def sort_and_melt(positions:[]):
+        list = []
+        positions.sort(key = cmp_to_key(TermFinder.sort_and_melt_compare))
+        segment_range = SegmentRange(positions[0], positions[0].duplicate())
+        list.append(segment_range)
+
+        for i in range(1, len(positions)):
+            is_continuous = (
+                    positions[i].index == segment_range.fro.index and
+                    positions[i].position == segment_range.into.position + 1
+            )
+            if is_continuous:
+                segment_range.into.position = positions[i].position
+            else:
+                segment_range = SegmentRange(positions[i], positions[i].duplicate())
+                list.append(segment_range)
+
+        return list
     @staticmethod
     def compute_token_association_scores(search_segment, text_segment, use_character_decomposition, normalize_widths):
         # Initialize the scores array
