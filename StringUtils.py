@@ -534,8 +534,8 @@ class StringUtils:
         twoletter = StringUtils.get_iso_language_code(culture_name)
         return twoletter == 'ja' or twoletter == 'zh' or twoletter == 'ko'
 
-    @staticmethod
     # Helper function to check if a character is an apostrophe
+    @staticmethod
     def is_apostrophe(ch):
         # Define apostrophe-like characters
         apostrophe_chars = {"'", "’"}  # Adjust this set based on your requirements

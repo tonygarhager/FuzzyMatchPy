@@ -158,12 +158,12 @@ class AbstractScorer(ABC):
 
     def apply_confirm_level_penalties(self, search_result:SearchResult):
         self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Unspecified, PenaltyType.NotTranslated)
-        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Draft, PenaltyType.Draft);
-        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Translated, PenaltyType.Translated);
-        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.ApprovedSignOff, PenaltyType.ApprovedSignOff);
-        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.ApprovedTranslation, PenaltyType.ApprovedTranslation);
-        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.RejectedTranslation, PenaltyType.RejectedTranslation);
-        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.RejectedSignOff, PenaltyType.RejectedSignOff);
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Draft, PenaltyType.Draft)
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.Translated, PenaltyType.Translated)
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.ApprovedSignOff, PenaltyType.ApprovedSignOff)
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.ApprovedTranslation, PenaltyType.ApprovedTranslation)
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.RejectedTranslation, PenaltyType.RejectedTranslation)
+        self.apply_confirm_level_penalty(search_result, ConfirmationLevel.RejectedSignOff, PenaltyType.RejectedSignOff)
 
     def apply_provider_penalty(self, search_result:SearchResult):
         penalty = self.settings.find_penalty(PenaltyType.ProviderPenalty)

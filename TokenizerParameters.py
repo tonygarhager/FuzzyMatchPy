@@ -184,13 +184,13 @@ class TokenizerParameters:
         return hash_set
 
     def create_default_fallback_recognizer(self, settings:RecognizerSettings, separate_clitics, accessor):
-        twoletter = StringUtils.half_width_to_full_width(self.culture_name)
+        twoletter = StringUtils.get_iso_language_code(self.culture_name)
 
         if twoletter is not None:
             if twoletter == 'ja' or twoletter == 'zh':
                 return DefaultJAZHFallbackRecognizer(settings, TokenType.Unknown, 0, self.culture_name, accessor)
             if twoletter == 'th' or twoletter == 'km':
-                return DefaultThaiFallbackRecognizer(settings, TokenType.Unknown, 0, self.culture_name, accessor);
+                return DefaultThaiFallbackRecognizer(settings, TokenType.Unknown, 0, self.culture_name, accessor)
             if twoletter == 'ko':
                 if any(recognizer.type == TokenType.Number for recognizer in self.recognizers):
                     return DefaultKoreanFallbackRecognizer(settings, TokenType.Unknown, 0, self.culture_name, accessor)
