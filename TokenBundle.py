@@ -1,5 +1,3 @@
-from rapidfuzz.distance.DamerauLevenshtein import similarity
-
 from Token import *
 
 class PrioritizedToken:

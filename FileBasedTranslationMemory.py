@@ -1,6 +1,8 @@
 import sqlite3
 from AnnotatedTranslationUnit import AnnotatedTranslationUnit
 from BooleanSettingsWrapper import BooleanSettingsWrapper
+from TMXReaderSettings import TMXReaderSettings
+from TUStreamContext import TUStreamContext
 from TranslationMemory import *
 from Resource import Resource
 from SearchResults import *
@@ -882,6 +884,7 @@ class FileBasedTranslationMemory:
             if not (list2 and len(list2) == adjusted_maxresults and results.count() < adjusted_maxresults):
                 break
         return max_tuid
+
 
 
 

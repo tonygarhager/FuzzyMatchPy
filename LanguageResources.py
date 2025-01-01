@@ -64,5 +64,3 @@ class LanguageResources:
     def stemming_rules(self):
         return self._stemming_rules#mod
 
-if __name__ == "__main__":
-    lr = LanguageResources('en-US')

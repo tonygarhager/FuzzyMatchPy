@@ -53,19 +53,3 @@ class DateTimeFSTEx:
         except Exception as e:
             raise Exception(f"Error during serialization: {str(e)}")
 
-if __name__ == '__main__':
-    # Example usage:
-    date_time_fst_ex = DateTimeFSTEx()
-    date_time_fst_ex.patterns.append("yyyy-MM-dd")
-    date_time_fst_ex.patterns.append("MM/dd/yyyy")
-
-    # Serialize the object to a binary (byte array)
-    binary_data = date_time_fst_ex.to_binary()
-    print("Serialized binary data:", binary_data)
-
-    # Deserialize the binary data back to a DateTimeFSTEx object
-    deserialized_date_time_fst_ex = DateTimeFSTEx.from_binary(binary_data)
-
-    # Output the patterns to verify
-    for pattern in deserialized_date_time_fst_ex.patterns:
-        print("Pattern:", pattern)

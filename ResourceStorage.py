@@ -151,11 +151,3 @@ class ResourceStorage:
         wordlist = Wordlist()
         wordlist.load_stream(stream, True)
         return wordlist
-
-if __name__ == "__main__":
-    storage = ResourceStorage()
-    memory_stream = storage.read_resource_data('en-US', 'CurrencySymbols', True)
-    from Wordlist import Wordlist
-    wordlist = Wordlist()
-    wordlist.load_internal(memory_stream, True)
-

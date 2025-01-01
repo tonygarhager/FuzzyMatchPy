@@ -73,29 +73,3 @@ class StoTranslationUnit:
             raise TypeError("Can only compare with another StoTranslationUnit")
         return self.id - other.id if self.id and other.id else 0
 
-
-# Example usage:
-if __name__ == "__main__":
-    source = "Source Segment"
-    target = "Target Segment"
-    creation_date = datetime.utcnow()
-    change_date = datetime.utcnow()
-    last_used_date = datetime.utcnow()
-
-    tu = StoTranslationUnit(
-        tm_id=1,
-        guid="12345",
-        source=source,
-        target=target,
-        creation_date=creation_date,
-        creation_user="creator",
-        change_date=change_date,
-        change_user="editor",
-        last_used_date=last_used_date,
-        last_used_user="user",
-        usage_counter=0,
-        flags=0,
-    )
-
-    print("Translation Unit created:")
-    print(tu)

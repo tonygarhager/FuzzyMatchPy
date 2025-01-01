@@ -32,15 +32,3 @@ class ResourceReader:
         """
         self.resources = None
 
-
-# Example usage
-if __name__ == "__main__":
-    # Assume we have a JSON file named 'resources.json' with content:
-    # { "hello": "Hello, world!", "goodbye": "Goodbye, world!" }
-    reader = ResourceReader('Sdl.LanguagePlatform.NLP.json')
-    try:
-        reader.open()
-        print(reader.get_resource("hello"))  # Output: Hello, world!
-        print(reader.get_resource("goodbye"))  # Output: Goodbye, world!
-    finally:
-        reader.close()

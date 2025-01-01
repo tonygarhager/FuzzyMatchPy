@@ -20,10 +20,10 @@ class DateTimeRecognizer(Recognizer):
     def create(settings: RecognizerSettings, access:LanguageResources, culture_name:str, types: DateTimePatternType, priority:int) -> Recognizer:
         dateTimeFstExMap = {}
         patterns = []
-        #mod
         recognizer = DateTimeRecognizer(settings, priority, patterns, dateTimeFstExMap, culture_name)
         recognizer.only_if_followed_by_nonword_character = CultureInfoExtensions.use_blank_as_word_separator(culture_name)
         return recognizer
 
     def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
+
         return None, consumed_length#mod

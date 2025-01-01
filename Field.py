@@ -603,12 +603,3 @@ class FieldDefinitions:
     def __len__(self):
         return len(self.fields)
 
-if __name__ == "__main__":
-    fields = FieldDefinitions()
-    # Initialize special fields (similar to C# static constructor logic)
-    Field._special_fields = FieldDefinitions()
-    Field._special_fields.add_field(Field(Field.STRUCTURE_CONTEXT_FIELD_NAME, FieldValueType.UNKNOWN, FieldType.SYSTEM))
-    Field._special_fields.add_field(Field(Field.TEXT_CONTEXT_FIELD_NAME, FieldValueType.MULTIPLE_STRING, FieldType.SYSTEM))
-    Field._special_fields.add_field(Field("chd", FieldValueType.DATE_TIME, FieldType.SYSTEM))
-    Field._special_fields.add_field(Field("chu", FieldValueType.SINGLE_STRING, FieldType.SYSTEM))
-    Field._special_fields.add_field(Field("src", FieldValueType.SINGLE_STRING, FieldType.PSEUDO))
