@@ -8,16 +8,13 @@ from CultureInfoExtensions import CultureInfoExtensions
 from Text import Text
 from StringUtils import StringUtils
 from SimpleToken import SimpleToken
-from NumberToken import NumberToken
-from TokenBundle import TokenBundle
+from NumberToken import *
+from TokenBundle import TokenBundle, PrioritizedToken
 from DateTimeToken import DateTimeToken
-from typing import List
-
+from typing import List, Callable
 from TokenizerHelper import TokenizerHelper
 from TokenizerParameters import TokenizerParameters
-from TokenizerFlags import TokenizerFlags
 from TokenizerSetup import TokenizerSetup
-
 
 class Tokenizer:
     max_acro_length = 6
@@ -33,7 +30,7 @@ class Tokenizer:
         return self.get_tokens(s, allow_token_bundles, True)
 
     def get_tokens(self, s:Segment, allow_token_bundles, enhanced_asian):
-        list = []
+        lst = []
         num = -1
 
         for segment_element in s.elements:
@@ -45,11 +42,11 @@ class Tokenizer:
                 tag_token = TagToken(segment_element)
                 tag_token.span = SegmentRange.create_3i(num, 0, 0)
                 tag_token.culture_name = self.parameters.culture_name
-                list.append(tag_token)
+                lst.append(tag_token)
             elif isinstance(segment_element, Token):
                 segment_element.span = SegmentRange.create_3i(num, 0, 0)
                 segment_element.culture_name = self.parameters.culture_name
-                list.append(segment_element)
+                lst.append(segment_element)
             elif isinstance(segment_element, Text):
                 list2 = self.tokenize_internal(segment_element.value, num, self.parameters.create_whitespace_tokens,
                                                allow_token_bundles, self.get_filtered_recognizers(segment_element.value))
@@ -57,11 +54,131 @@ class Tokenizer:
                 if enhanced_asian:
                     list2 = self.get_advanced_tokens(list2)
                 if list2 is not None and len(list2) > 0:
-                    list.extend(list2)
+                    lst.extend(list2)
 
-        self.reclassify_acronyms(list, enhanced_asian)
-        self.adjust_number_range_tokenization(list)
-        return list
+        self.reclassify_acronyms(lst, enhanced_asian)
+        self.adjust_number_range_tokenization(lst)
+        return lst
+
+    @staticmethod
+    def token_test(t:Token, f:Callable[[Token], bool])->bool:
+        if isinstance(t, TokenBundle):
+            token_bundle:TokenBundle = t
+            return any(f(x.token) for x in token_bundle)
+        return f(t)
+
+    @staticmethod
+    def is_negative_sub1(x:Token) -> bool:
+        if not isinstance(x, MeasureToken):
+            return False
+        measure_token:MeasureToken = x
+        return measure_token.unit == Unit.Currency
+
+    @staticmethod
+    def is_negative_sub2(x:Token) -> bool:
+        if not isinstance(x, NumberToken):
+            return False
+        number_token:NumberToken = x
+        return number_token.value < 0.0
+
+    @staticmethod
+    def is_negative_sub3(x:PrioritizedToken) -> bool:
+        if not isinstance(x.token, NumberToken):
+            return False
+        number_token: NumberToken = x.token
+        return number_token.value < 0.0
+
+    @staticmethod
+    def is_negative(t:Token) -> bool:
+        if Tokenizer.token_test(t, Tokenizer.is_negative_sub1):
+            if isinstance(t, TokenBundle):
+                token_bundle:TokenBundle = t
+                return any(Tokenizer.is_negative_sub3(x) for x in token_bundle)
+        return Tokenizer.token_test(t, Tokenizer.is_negative_sub2)
+
+    @staticmethod
+    def is_currency_sub(x:Token) -> bool:
+        if not isinstance(x, MeasureToken):
+            return False
+        measure_token:MeasureToken = x
+        return measure_token.unit == Unit.Currency
+
+    @staticmethod
+    def is_currency(t:Token) -> bool:
+        return Tokenizer.token_test(t, Tokenizer.is_currency_sub)
+
+    @staticmethod
+    def unit_string_in_front_sub(x:Token) -> bool:
+        if not isinstance(x, MeasureToken):
+            return False
+        measure_token:MeasureToken = x
+        return (measure_token.unit == Unit.Currency and
+                measure_token.unit_string is not None and len(measure_token.unit_string) > 0 and
+                measure_token.text is not None and len(measure_token.text) > 0 and
+                measure_token.unit_string[0] == measure_token.text[0])
+
+    @staticmethod
+    def unit_string_in_front(t:Token) -> bool:
+        return Tokenizer.token_test(t, Tokenizer.unit_string_in_front_sub)
+
+    @staticmethod
+    def unit_string(t:Token) -> str:
+        if isinstance(t, TokenBundle):
+            token_bundle:TokenBundle = t
+            if any(isinstance(x, MeasureToken) for x in token_bundle):
+                return token_bundle[0].token.unit_string
+            return None
+        if not isinstance(t, MeasureToken):
+            return None
+        return t.unit_string
+
+
+    @staticmethod
+    def forms_number_range(nt1:Token, nt2:Token) -> bool:
+        if nt1.type == TokenType.Number:
+            if nt2.type == TokenType.Number:
+                return True
+            if nt2.type == TokenType.Measurement:
+                return not Tokenizer.is_currency(nt2) or not Tokenizer.unit_string_in_front(nt2)
+        return nt2.type == TokenType.Measurement and Tokenizer.unit_string(nt1) == Tokenizer.unit_string(nt2)
+
+    @staticmethod
+    def get_token_text(t:Token) -> str:
+        if not isinstance(t, TokenBundle):
+            return t.text
+        token_bundle:TokenBundle = t
+        return token_bundle[0].token.text
+
+    @staticmethod
+    def make_positive(t:Token) -> Token:
+        if isinstance(t, TokenBundle):
+            token_bundle:TokenBundle = t
+            token_bundle2 = None
+            for prioritized_token in token_bundle:
+                if token_bundle2 is None:
+                    token_bundle2 = TokenBundle(Tokenizer.make_positive(prioritized_token.token), prioritized_token.priority)
+                else:
+                    token_bundle2.add(Tokenizer.make_positive(prioritized_token.token), prioritized_token.priority)
+            return token_bundle2
+        number_token:NumberToken = t
+        number_token2 = NumberToken(number_token.text[1:], number_token.group_separator, number_token.decimal_separator, number_token.alternate_group_separator, number_token.alternate_decimal_separator, Sign.Non, '', number_token.raw_decimal_digits, number_token.raw_fractional_digits)
+        tp = t.type
+        if tp == TokenType.Number:
+            return number_token2
+        if tp != TokenType.Measurement:
+            raise Exception('Invalid token type t')
+        measure_token:MeasureToken = t
+        return MeasureToken(measure_token.text[1:], number_token2, measure_token.unit, measure_token.unit_string, measure_token.unit_separator, measure_token.custom_category)
+
+    @staticmethod
+    def set_span(t:Token, r:SegmentRange):
+        if isinstance(t, TokenBundle):
+            token_bundle:TokenBundle = t
+            token_bundle.span = r
+            for prioritized_token in token_bundle:
+                prioritized_token.token.span = r
+            return
+        t.span = r
 
     def adjust_number_range_tokenization(self, tokens: List[Token]) -> None:
         if tokens is None:
@@ -107,13 +224,13 @@ class Tokenizer:
         return tokenizer_helper.tokenize_icu(tokens, self.parameters.culture_name, self.parameters.advanced_tokenization_stopword_list)
 
     def get_filtered_recognizers(self, s:str) -> List[Recognizer]:
-        list = []
+        lst = []
         for i in range(self.parameters.count()):
             recognizer = self.parameters[i]
 
             if not isinstance(recognizer, IRecognizerTextFilter) or recognizer.exclude_text(s) == False:
-                list.append(recognizer)
-        return list
+                lst.append(recognizer)
+        return lst
 
     @staticmethod
     def count_letters(s:str, upper:int, lower:int, no_case:int, no_char:int):
@@ -122,14 +239,14 @@ class Tokenizer:
                 upper += 1
             elif c.islower():
                 lower += 1
-            elif c.isaplha():
+            elif c.isalpha():
                 no_case += 1
             else:
                 no_char += 1
         return upper, lower, no_case, no_char
 
     def reclassify_acronyms(self, tokens, enhanced_asian):
-        if self.parameters.reclassify_achronyms == False:
+        if not self.parameters.reclassify_achronyms:
             return
 
         acronym_tokens = [token for token in tokens if token.type == TokenType.Acronym]
@@ -172,7 +289,7 @@ class Tokenizer:
                 token.type = TokenType.Word
 
     def tokenize_internal(self, s:str, current_run:int, create_whitespace_tokens:bool, allow_token_bundles:bool, recognizers:[]):
-        list = []
+        lst = []
         num = -1
         flag = not CultureInfoExtensions.use_blank_as_word_separator(self.parameters.culture_name)
         i = 0
@@ -186,7 +303,7 @@ class Tokenizer:
                     token = SimpleToken(s[num2:i], TokenType.Whitespace)
                     token.culture_name = self.parameters.culture_name
                     token.span = SegmentRange.create_3i(current_run, num2, i - 1)
-                    list.append(token)
+                    lst.append(token)
                 num2 = i
             if i >= length:
                 break
@@ -211,7 +328,7 @@ class Tokenizer:
                         i = num2 + num4
             if token2 is not None:
                 if isinstance(token2, TokenBundle):
-                    if token2.count() == 1:
+                    if len(token2) == 1:
                         token2 = token2[0].token
             else:
                 while i < length and StringUtils.get_unicode_category(s[i]) == StringUtils.get_unicode_category(s[num2]):
@@ -220,21 +337,21 @@ class Tokenizer:
                 token2.culture_name = self.parameters.culture_name
 
             if not token2:
-                raise('winningToken can\'t be null')
+                raise Exception('winningToken can\'t be null')
 
             token2.span = SegmentRange.create_3i(current_run, num2, i - 1)
-            list.append(token2)
+            lst.append(token2)
 
             if self.parameters.has_variable_recognizer:
-                list, _ = self.apply_variable_recognizer(s, token2, list, num)
+                lst, _ = self.apply_variable_recognizer(s, token2, lst, num)
 
-        return list
+        return lst
     
-    def apply_variable_recognizer(self, s:str, token:Token, list:[], start_chain_token_position:int):
+    def apply_variable_recognizer(self, s:str, token:Token, lst:[], start_chain_token_position:int):
         if Tokenizer.is_variable_part(token):
-            return self.check_for_variable_tokens(token, s, list, start_chain_token_position)
+            return self.check_for_variable_tokens(token, s, lst, start_chain_token_position)
         start_chain_token_position = -1
-        return list, start_chain_token_position
+        return lst, start_chain_token_position
 
     @staticmethod
     def is_variable_part(token:Token):
@@ -256,7 +373,7 @@ class Tokenizer:
                 result = Tokenizer.merge_last_tokens(text, i, result, num, self.parameters.culture_name)
                 return result, start_chain_token_position
             num += 1
-            while (num <= len(result) - 1 and not Tokenizer.is_variable_part(result[num])):
+            while num <= len(result) - 1 and not Tokenizer.is_variable_part(result[num]):
                 num += 1
             i = len(result) - num
         return result, start_chain_token_position

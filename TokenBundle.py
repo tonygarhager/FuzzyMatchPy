@@ -1,7 +1,11 @@
 from rapidfuzz.distance.DamerauLevenshtein import similarity
 
 from Token import *
-from PrioritizedToken import PrioritizedToken
+
+class PrioritizedToken:
+    def __init__(self, token, priority):
+        self.token = token
+        self.priority = priority
 
 class TokenBundle(Token):
     def __init__(self, t:Token, priority:int):
@@ -9,7 +13,7 @@ class TokenBundle(Token):
         self.alternatives = [PrioritizedToken(t, priority)]
         self.culture_name = t.culture_name
 
-    def count(self):
+    def __len__(self):
         return len(self.alternatives)
 
     def add(self, t:Token, priority:int):

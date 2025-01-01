@@ -1,9 +1,10 @@
 from LanguageResources import LanguageResources
-from StringUtils import StringUtils
 from Tokenizer import *
 from Segment import Segment
 from typing import Tuple
 from typing import List
+
+from TokenizerSetup import TokenizerFlags
 from TokenizerHelper import TokenizerHelper
 from IStemmer import IStemmer
 from TokenizerSetup import TokenizerSetup
@@ -37,14 +38,14 @@ class LanguageTools:
     def stem(self, s:Segment) -> None:
         self.ensure_tokenized_segment(s)
         for token in s.tokens:
-            type = token.type
-            if type == TokenType.Word or type == TokenType.CharSequence or (type == TokenType.Acronym and self._use_alternate_stemmers):
+            tp = token.type
+            if tp == TokenType.Word or tp == TokenType.CharSequence or (tp == TokenType.Acronym and self._use_alternate_stemmers):
                 if isinstance(token, SimpleToken) and token.stem is None and not any(char.isdigit() for char in token.text):
                     if token.type == TokenType.CharSequence:
                         token.stem = token.text
                     else:
                         token.stem = self.stemmer.stem(token.text)
-                        if (self._normalize_char_widths):
+                        if self._normalize_char_widths:
                             token.stem = StringUtils.half_width_to_full_width(token.stem)
 
     def is_non_blank_language(self) -> bool:
@@ -143,58 +144,57 @@ class LanguageTools:
         return self._tokenizer
 
     def compute_char_feature_vector(self, fvt:int, segment:Segment, n:int, unique:bool, feature_ranges:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
-        list:List[(int, int)] = None
+        lst:List[(int, int)] = None
         list2:List[SegmentRange] = None
 
         if feature_ranges is not None and unique == False:
-            list = List[(int, int)]
-            list2 = List[SegmentRange]
+            lst = []
+            list2 = []
             feature_ranges.clear()
-        s = ''
         if fvt != FeatureVectorType.ForTranslationMemory:
             if fvt != FeatureVectorType.ForConcordance:
-                raise('Unexpected case')
+                raise Exception('Unexpected case')
             s, list2 = self.compute_identity_string(segment, LanguageTools.TokenToFeatureMappingMode.Token, list2)
         else:
             s, list2 = self.compute_identity_string(segment, LanguageTools.TokenToFeatureMappingMode.Stem, list2)
 
-        result, list = self.compute_char_feature_vector4(s, n, unique, list)
+        result, lst = self.compute_char_feature_vector4(s, n, unique, lst)
 
         if not list2:
             return result, feature_ranges
-        for pair in list:
+        for pair in lst:
             item = list2[pair.second]
             feature_ranges.append(item)
         return result, feature_ranges
 
     def compute_char_feature_vector4(self, s:str, n:int, unique:bool, feature_position_association):
-        list = []
+        lst = []
         flag = False
         if feature_position_association is not None:
             feature_position_association.clear()
             flag = (unique == False)
         if s is None or len(s) == 0:
-            list.append(0)
+            lst.append(0)
         elif len(s) <= n:
-            list.append(Hash.get_hashcode_int(s))
+            lst.append(Hash.get_hashcode_int(s))
             if flag:
                 feature_position_association.append((0, len(s) - 1))
         else:
             for i in range(len(s) - n + 1):
                 hash_code_int = Hash.get_hashcode_int(s[i:i + n])
-                if unique == False or hash_code_int not in list:
-                    list.append(hash_code_int)
+                if unique == False or hash_code_int not in lst:
+                    lst.append(hash_code_int)
                     if flag:
                         feature_position_association.append((i, i + n - 1))
 
         if unique:
-            list.sort()
+            lst.sort()
 
-        return list, feature_position_association
+        return lst, feature_position_association
 
     def compute_token_feature_vector(self, segment:Segment, include_frequent:bool, unique:bool, feature_to_range_mapping:List[SegmentRange]) -> Tuple[List[int], List[SegmentRange]]:
         flag = feature_to_range_mapping is not None and unique == False
-        list = []
+        lst = []
         if flag and len(feature_to_range_mapping) > 0:
             feature_to_range_mapping.clear()
         for token in segment.tokens:
@@ -210,8 +210,8 @@ class LanguageTools:
                 enumer2, list2 = self.compute_char_feature_vector4(token.text, 3, unique, list2)
 
                 for num3 in enumer2:
-                    if num3 != 0 and (unique == False or num3 not in list):
-                        list.append(num3)
+                    if num3 != 0 and (unique == False or num3 not in lst):
+                        lst.append(num3)
                         if flag:
                             num4 = token.span.fro.position_in_run + num2
                             feature_to_range_mapping.append(SegmentRange.create_3i(token.span.fro.index, num4, num4))
@@ -221,27 +221,15 @@ class LanguageTools:
             elif token.type == TokenType.Date or token.type == TokenType.Time or token.type == TokenType.Variable or token.type == TokenType.Number or token.type == TokenType.Measurement or token.type == TokenType.UserDefined or token.type == TokenType.AlphaNumeric:
                 num = token.type
 
-            if num == 0 or (unique and num in list):
+            if num == 0 or (unique and num in lst):
                 continue
-            list.append(num)
+            lst.append(num)
             if flag:
                 feature_to_range_mapping.append(token.span)
                 continue
 
-        list.sort()
-        return list, feature_to_range_mapping
+        lst.sort()
+        return lst, feature_to_range_mapping
 
     def is_stopword(self, s:str) -> bool:
         return self._resources.is_stopword(s.lower())
-
-    def get_stoplist_signature(self) -> str:
-        return self._resources.get_stoplist_signature()
-
-    def get_tokenizer_signature(self) -> str:
-        return self._tokenizer.get_signature()
-
-    def get_stemmer_signature(self) -> str:
-        return self._stemmer.get_signature()
-
-    def get_abbreviation_signature(self) -> str:
-        return self._resources.get_abbreviation_signature()

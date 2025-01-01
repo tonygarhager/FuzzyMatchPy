@@ -1,7 +1,13 @@
 from CultureInfoExtensions import CultureInfoExtensions
-from TokenizerFlags import TokenizerFlags
 from BuiltinRecognizers import BuiltinRecognizers
 
+class TokenizerFlags:
+    NoFlags = 0
+    BreakOnHyphen = 1
+    BreakOnDash = 2
+    BreakOnApostrophe = 4
+    AllFlags = 3
+    DefaultFlags = 7
 
 class TokenizerSetup:
     def __init__(self):

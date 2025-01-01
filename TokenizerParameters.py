@@ -1,19 +1,10 @@
-from TokenizerFlags import TokenizerFlags
-from Wordlist import Wordlist
-from StringUtils import StringUtils
 from DefaultFallbackRecognizer import *
-from LanguageResource import *
-from LanguageResources import LanguageResources
-from TokenizerSetup import TokenizerSetup
-from Recognizer import *
+from TokenizerSetup import *
 from DateTimeRecognizer import *
 from NumberFSTRecognizer import *
 from AlphanumRecognizer import *
-from CultureInfoExtensions import CultureInfoExtensions
 from AcronymRecognizer import AcronymRecognizer
 from RegexRecognizer import *
-from CharacterSet import CharacterSet
-from Token import *
 from MeasureFSTRecognizer import *
 from TokenizerHelper import *
 from BuiltinRecognizers import BuiltinRecognizers
@@ -90,7 +81,7 @@ class TokenizerParameters:
         if TokenizerHelper.uses_advanced_tokenization(culture_name):
             try:
                 wordlist = Wordlist()
-                stream = access.read_resource_data(culture_name, LanguageResourceType.Stopwords, True)
+                stream = access.accessor.read_resource_data(culture_name, LanguageResourceType.Stopwords, True)
                 if stream is not None:
                     wordlist.load_stream(stream, True)
                 self.advanced_tokenization_stopword_list = wordlist.words
@@ -111,7 +102,7 @@ class TokenizerParameters:
 
     @staticmethod
     def create_uri_recognizer(settings, actual_culture, priority, culture):
-        regex_recognizer = RegexRecognizer(settings, "Uri", priority, "URI", "DEFAULT_URI_RECOGNIZER", False, culture)
+        regex_recognizer = RegexRecognizer(settings, TokenType.Uri, priority, "URI", "DEFAULT_URI_RECOGNIZER", False, culture)
         character_set = CharacterSet()
         character_set.add('h')
         character_set.add('H')
@@ -201,11 +192,3 @@ class TokenizerParameters:
 
     def sort_recognizer(self):
         self.recognizers.sort(key=lambda recognizer: recognizer.priority, reverse=True)
-
-if __name__ == '__main__':
-    setup = {}
-    setup['break_on_whitespace'] = True
-    setup['create_whitespace_tokens'] = True
-    setup['culture_name'] = 'en-US'
-    parameters = TokenizerParameters(setup)
-    print(parameters.culture_name)
