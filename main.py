@@ -71,15 +71,15 @@ def main(args):
     file_path = "result.json"
 
     # Write data to JSON file
-    with open(file_path, "w") as json_file:
-        json.dump(json_res, json_file, indent=4)
+    with open(file_path, "w", encoding="utf-8") as json_file:
+        json.dump(json_res, json_file, indent=4, ensure_ascii=False)
 
     print('Saved to result.json')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script for default arguments.")
     parser.add_argument("--tmpath", type=str, default="test/test.sdltm", help="First argument")
-    parser.add_argument("--query", type=str, default="7/24/2022", help="Second argument")
+    parser.add_argument("--query", type=str, default="our belief", help="Second argument")
     parser.add_argument("--maxResults", type=int, default=5, help="Second argument")
     parser.add_argument("--minScore", type=int, default=70, help="Second argument")
     args = parser.parse_args()
