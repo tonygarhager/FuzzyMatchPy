@@ -1,3 +1,4 @@
+from Placeable import PlaceableComputer
 from Segment import Segment
 from SystemFields import SystemFields
 from Tag import *
@@ -307,3 +308,6 @@ class TranslationUnit:
 
         # Ensure consistent alignment
         TranslationUnit.ensure_consistent_alignment(alignable_tags, alignable_tags2, used_tag_ids)
+
+    def compute_placeables(self):
+        return PlaceableComputer.compute_placeables(self.src_segment, self.trg_segment)

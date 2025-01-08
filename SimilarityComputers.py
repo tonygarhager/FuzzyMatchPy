@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from BuiltinRecognizers import BuiltinRecognizers
 from EditDistance import EditDistance, EditOperation, EditDistanceItem
 from SegmentElement import SegmentElement
+from SimpleToken import SimpleToken
 from StringUtils import StringUtils
+from Tag import TagType
+from TagToken import TagToken
 from Token import Token, TokenType
 
 @dataclass
@@ -173,30 +176,128 @@ class SimilarityComputers:
                 SegmentElement.Similarity.IdenticalValueAndType: 1.0}.get(similarity, 0.0)
 
     @staticmethod
-    def get_token_similarity(a: Token, b: Token, use_string_edit_distance: bool, disabled_auto_substitutions: int,
-                                       characters_normalize_safely: bool = True, apply_small_change_adjustment: bool = True) -> float:
-        if (isinstance(a, Token) != isinstance(b, Token) or
-                a.is_whitespace != b.is_whitespace or
-                a.is_punctuation != b.is_punctuation):
-            return -1.0
-
-        if a.is_placeable and b.is_placeable:
-            return SimilarityComputers.get_placeable_similarity(a, b, disabled_auto_substitutions)
-
-        if not a.text or not b.text:
+    def get_placeable_similarity_async(a, b, disabled_auto_substitutions):
+        if not a.is_placeable or not b.is_placeable:
             return 0.0
+        elif a.type != b.type or type(a) != type(b):
+            return 0.0
+        else:
+            tag_token_a = isinstance(a, TagToken)
+            tag_token_b = isinstance(b, TagToken)
 
-        num2 = 0.0 if a.is_word == b.is_word else 0.1
-        if a.text == b.text:
-            return 1.0
-        elif a.is_whitespace or a.is_punctuation:
-            return 0.94
-        elif SimilarityComputers.string_equals_ordinal_ignore_case_and_diacritics(a.text, b.text, characters_normalize_safely):
-            return 0.95
+            if tag_token_a or tag_token_b:
+                if not (tag_token_a and tag_token_b):
+                    return -1.0
+                if a.tag.type != b.tag.type:
+                    return -1.0
 
-        similarity_score = 0.95 * SimilarityComputers.get_threshold(
-            SimilarityComputers.get_string_similarity(a.text, b.text, None, True))
-        return max(0.0, similarity_score - num2)
+            if disabled_auto_substitutions != BuiltinRecognizers.RecognizeNone:
+                flag = False
+                if a.type == TokenType.Abbreviation:
+                    flag = (
+                                       disabled_auto_substitutions & BuiltinRecognizers.RecognizeAcronyms) > BuiltinRecognizers.RecognizeNone
+                elif a.type == TokenType.Date:
+                    flag = (
+                                       disabled_auto_substitutions & BuiltinRecognizers.RecognizeDates) > BuiltinRecognizers.RecognizeNone
+                elif a.type == TokenType.Time:
+                    flag = (
+                                       disabled_auto_substitutions & BuiltinRecognizers.RecognizeTimes) > BuiltinRecognizers.RecognizeNone
+                elif a.type == TokenType.Variable:
+                    flag = (
+                                       disabled_auto_substitutions & BuiltinRecognizers.RecognizeVariables) > BuiltinRecognizers.RecognizeNone
+                elif a.type == TokenType.Number:
+                    flag = (
+                                       disabled_auto_substitutions & BuiltinRecognizers.RecognizeNumbers) > BuiltinRecognizers.RecognizeNone
+                elif a.type == TokenType.Measurement:
+                    flag = (
+                                       disabled_auto_substitutions & BuiltinRecognizers.RecognizeMeasurements) > BuiltinRecognizers.RecognizeNone
+
+                if flag:
+                    return 1.0 if a == b else 0.7
+
+            similarity_result = a.get_similarity(b)
+
+            if similarity_result == SegmentElement.Similarity.Non:
+                return 0.7
+            elif similarity_result == SegmentElement.Similarity.IdenticalType:
+                return 0.85
+            elif similarity_result == SegmentElement.Similarity.IdenticalValueAndType:
+                return 1.0
+            else:
+                return 0.0
+
+    @staticmethod
+    def get_token_similarity(
+            a, b, use_string_edit_distance, disabled_auto_substitutions,
+            characters_normalize_safely=True, apply_small_change_adjustment=True
+    ):
+        num = 0.0
+        flag = isinstance(a, TagToken)
+        flag2 = isinstance(b, TagToken)
+
+        if flag != flag2 or a.is_whitespace != b.is_whitespace or a.is_punctuation != b.is_punctuation:
+            num = -1.0
+        elif flag and flag2:
+            if a.tag.type == b.tag.type:
+                num = 0.95
+            elif ((a.tag.type == TagType.Standalone and b.tag.type == TagType.TextPlaceholder) or
+                  (a.tag.type == TagType.TextPlaceholder and b.tag.type == TagType.Standalone)):
+                num = 0.85
+            else:
+                num = -1.0
+        else:
+            num2 = 0.0
+            if a.is_placeable and b.is_placeable:
+                num = SimilarityComputers.get_placeable_similarity(a, b, disabled_auto_substitutions)
+            elif a.text is None or b.text is None:
+                num = 0.0
+            else:
+                if a.is_word != b.is_word:
+                    num2 = 0.1
+
+                if a.text == b.text:
+                    num4 = 1.0
+                elif a.is_whitespace or a.is_punctuation:
+                    num4 = 0.94
+                elif SimilarityComputers.string_equals_ordinal_ignore_case_and_diacritics(
+                        a.text, b.text, characters_normalize_safely
+                ):
+                    num4 = 0.95
+                else:
+                    simple_token_a = isinstance(a, SimpleToken)
+                    simple_token_b = isinstance(b, SimpleToken)
+                    if simple_token_a and simple_token_b:
+                        if (a.stem is not None and b.stem is not None and
+                                SimilarityComputers.string_equals_ordinal_ignore_case_and_diacritics(
+                                    a.stem, b.stem, True
+                                )):
+                            num4 = 0.95
+                        else:
+                            num4 = 0.0
+                            similarity_computer = None
+                            if not use_string_edit_distance:
+                                return max(0.0, num4 - num2)
+
+                            text = a.text
+                            text2 = b.text
+                            if not characters_normalize_safely:
+                                similarity_computer = SimilarityComputers.get_char_similarity_without_to_base
+                            num4 = SimilarityComputers.get_threshold(
+                                SimilarityComputers.get_string_similarity(
+                                    text, text2, similarity_computer, apply_small_change_adjustment
+                                )
+                            )
+                    else:
+                        num4 = (
+                            0.95 * SimilarityComputers.get_threshold(
+                                SimilarityComputers.get_string_similarity(
+                                    a.text, b.text, None, True
+                                )
+                            ) if use_string_edit_distance else 0.0
+                        )
+                num = max(0.0, num4 - num2)
+
+        return num
 
     @staticmethod
     def get_threshold(sim: float) -> float:

@@ -97,6 +97,41 @@ class SegmentEditDistanceComputer:
     def compute_edit_distance_matrix_lazy(self, matrix, sim:SimilarityMatrix):
         self.compute_cell(matrix, sim, len(sim.source_tokens), len(sim.target_tokens))
 
+    def detect_moves(self, result, matrix):
+        num = 0
+        for i in range(len(result.items)):
+            operation = result.items[i].operation
+            if operation == EditOperation.Delete or operation == EditOperation.Insert:
+                num2 = num3 = num4 = num5 = 0
+                for j in range(i + 1, len(result.items)):
+                    if operation == EditOperation.Delete and result.items[j].operation == EditOperation.Insert:
+                        if matrix[result.items[i].source + 1][result.items[j].target + 1].similarity >= 0.95:
+                            num2 = result.items[i].source
+                            num4 = result.items[i].target
+                            num3 = result.items[j].target
+                            num5 = result.items[j].source
+                            break
+                    elif operation == EditOperation.Insert and result.items[j].operation == EditOperation.Delete:
+                        if matrix[result.items[j].source + 1][result.items[i].target + 1].similarity >= 0.95:
+                            num2 = result.items[j].source
+                            num4 = result.items[j].target
+                            num3 = result.items[i].target
+                            num5 = result.items[i].source
+                            break
+
+                if j < len(result.items):
+                    edit_distance_item = result.items[i]
+                    edit_distance_item.operation = EditOperation.Move
+                    edit_distance_item.source = num2
+                    edit_distance_item.target = num3
+                    edit_distance_item.move_source_target = num4
+                    edit_distance_item.move_target_source = num5
+                    result.items[i] = edit_distance_item
+                    result.items.pop(j)
+                    num += 1
+
+        return num
+
     def compute_edit_distance_impl_original(self, source_tokens, target_tokens, disabled_auto_substitutions:BuiltinRecognizers, diagonal_only:bool):
         if diagonal_only and len(target_tokens) != len(source_tokens):
             raise Exception("diagonal_only and target_tokens must have same length")

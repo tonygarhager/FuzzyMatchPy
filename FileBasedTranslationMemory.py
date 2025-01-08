@@ -364,7 +364,7 @@ class FileBasedTranslationMemory:
             if self.settings.is_concordance_search == False:
                 res.memory_placeables = PlaceableComputer.compute_placeables(mem_tu.src_segment, mem_tu.trg_segment)
 
-            self._scorer.compute_scores(res, search_tu.source, search_tu.target, None, TuContextData(), False, None, False, skip_filters)
+            self._scorer.compute_scores(res, search_tu.source, search_tu.target, results.document_placeables, TuContextData(), False, None, False, skip_filters)
 
             if (res.scoring_result.match >= self.settings.min_score and
                     (self.settings.mode != SearchMode.ExactSearch or
