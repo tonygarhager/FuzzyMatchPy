@@ -103,10 +103,12 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
         for b in bytes_data:
             num += b
             num += num << 10
+            num = num & 0xffffffff
             num ^= num >> 6
         num += num << 3
+        num = num & 0xffffffff
         num ^= num >> 11
-        return num + (num << 15)
+        return (num + (num << 15)) & 0xffffffff
 
     @staticmethod
     def fnv1a_32_hash(array, ib_start, cb_size):
@@ -121,7 +123,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
     def get_strict_hash(s):
         bytes_data = s.encode('utf-16le')  # Encoding.Unicode in C# corresponds to UTF-16 LE
         num = AbstractAnnotatedSegment.fnv1a_32_hash(bytes_data, 0, len(bytes_data))
-        num2 = AbstractAnnotatedSegment.jenkins_hash(bytes_data)
+        num2 = int(AbstractAnnotatedSegment.jenkins_hash(bytes_data))
         num2 = num2 & 0xFFFFFFFFFFFF0000  # Apply the mask 18446744073709486080UL
         num3 = num + num2
         num3 += len(s) & 0xFFFF  # Include string length masked with 65535
@@ -193,7 +195,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
                     text = StringUtils.escape_fn(token.text)
 
             elif token.type == TokenType.Tag:
-                text = "\\"
+                text = "\\" + chr(0xF164)
 
             if text is not None:
                 result.append(text)
