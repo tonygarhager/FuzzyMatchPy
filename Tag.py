@@ -37,7 +37,7 @@ class Tag(SegmentElement):
                  anchor:int = 0,
                  alignment_anchor:int = 0,
                  text_equivalent:str = '',
-                 canhide:bool = False,):
+                 canhide:bool = False):
         self.anchor = anchor
         self.alignment_anchor = alignment_anchor
         self.tagid = tagid

@@ -1,5 +1,6 @@
 from AnnotatedSegment import AnnotatedSegment
 from AnnotatedTranslationMemory import AnnotatedTranslationMemory
+from BuiltinRecognizers import BuiltinRecognizers
 from CultureInfoExtensions import CultureInfoExtensions
 from LanguageTools import LanguageTools
 from Penalty import PenaltyType
@@ -9,7 +10,9 @@ from SearchSettings import SearchSettings, SearchMode
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 from Segment import Segment
+from SegmentEditDistanceComputer import SegmentEditDistanceComputer
 from SimpleToken import SimpleToken
+from StringUtils import StringUtils
 from TagToken import TagToken
 from TermFinder import TermFinder
 from Token import Token
@@ -102,9 +105,49 @@ class AbstractScorer(ABC):
     def is_stopword(t:Token) -> bool:
         return isinstance(t, SimpleToken) and t.is_stopword
 
+    @staticmethod
+    def apply_small_change_adjustment(culture_name:str) -> bool:
+        regionNeutralName = StringUtils.get_iso_language_code(culture_name)
+        return (regionNeutralName != "ko") and (regionNeutralName != "ja") and (regionNeutralName != "cz")
+
+    def compare_with_edit_distance(self, doc_src_segment:AnnotatedSegment, doc_tgt_segment:AnnotatedSegment,
+                                   document_placeables, result:ScoringResult, search_result:SearchResult, is_duplicate_search:bool, score_diagonal_only:bool):
+        char_width_difference = False
+        characters_normalize_safely = StringUtils.get_iso_language_code(doc_src_segment.segment.culture_name) != 'ko'
+        apply_small_change_adjustment = AbstractScorer.apply_small_change_adjustment(doc_src_segment.segment.culture_name)
+        segment_edit_distance_computer = SegmentEditDistanceComputer()
+        disable_auto_substitutions = BuiltinRecognizers.RecognizeNone
+        result.edit_distance, _ = (
+            segment_edit_distance_computer.compute_edit_distance(doc_src_segment.segment.tokens,
+                                                                 search_result.memory_translation_unit.src_segment.tokens,
+                                                                 is_duplicate_search,
+                                                                 disable_auto_substitutions,
+                                                                 characters_normalize_safely,
+                                                                 apply_small_change_adjustment,
+                                                                 is_duplicate_search or score_diagonal_only))
+        result.resolved_placeables = 0
+        self.target_tools.stem(search_result.memory_translation_unit.trg_segment)
+        if search_result.memory_placeables is None:
+            search_result.memory_placeables = search_result.memory_translation_unit.compute_placeables()
+        src_tag_count = 0
+
+
+
+    def compare_tokens(self, doc_src_segment:AnnotatedSegment, doc_tgt_segment:AnnotatedSegment, document_placeables,
+                       result:ScoringResult, search_result:SearchResult, is_duplicate_search:bool, score_diagonal_only:bool):
+        num = 0
+        flag = False
+
+        if doc_src_segment.segment.tokens is not None:
+            if SegmentEditDistanceComputer.can_compute_edit_distance(len(doc_src_segment.segment.tokens), len(search_result.memory_translation_unit.src_segment.tokens)):
+                num, flag = self.compare_with_edit_distance(doc_src_segment, doc_tgt_segment, document_placeables, result, search_result, is_duplicate_search, score_diagonal_only)
+            else:
+                num = 100 if str(doc_src_segment.segment) == str(search_result.memory_translation_unit.src_segment) else 0
+        return num, flag
+
     def compute_scores(self, search_result:SearchResult, doc_src_segment:AnnotatedSegment, doc_tgt_segment:AnnotatedSegment,
                        document_places:[], tu_context_data:TuContextData, is_duplicate_search:bool,
-                       used_index:FuzzyIndexes, score_diagonal_only:bool = False):
+                       used_index:FuzzyIndexes, score_diagonal_only:bool = False, skip_filters:bool = True):
         char_width_difference = False
         scoring_result = ScoringResult()
 
@@ -116,7 +159,11 @@ class AbstractScorer(ABC):
         if self.settings.is_concordance_search:
             num = self.get_concordance_score(search_result, doc_src_segment, doc_tgt_segment)
         else:
-            pass#mod
+            if doc_src_segment.segment.tokens is None:
+                self.source_tools.ensure_tokenized_segment(doc_src_segment.segment)
+            self.source_tools.stem(doc_src_segment.segment)
+            self.source_tools.stem(search_result.memory_translation_unit.src_segment)
+            num, char_width_difference = self.compare_tokens(doc_src_segment, doc_tgt_segment, document_places, scoring_result, search_result, is_duplicate_search, score_diagonal_only)
 
         if num > 100:
             num = 100

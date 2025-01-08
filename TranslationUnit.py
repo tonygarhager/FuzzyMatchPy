@@ -55,17 +55,17 @@ class TranslationUnit:
 
         return alignable_tags if len(alignable_tags) > 0 else None
 
-    def renumber_tag_anchors(self):
-        max_alignment_anchor = [0]  # Using a list to simulate pass-by-reference behavior
+    def renumber_tag_anchors(self) -> int:
+        max_alignment_anchor = 0  # Using a list to simulate pass-by-reference behavior
         source_segment = self.src_segment
         if source_segment is not None:
-            _, max_alignment_anchor = source_segment.renumber_tag_anchors(max_alignment_anchor)
+            _, max_alignment_anchor = source_segment.renumber_tag_anchors(1, max_alignment_anchor)
 
         target_segment = self.trg_segment
         if target_segment is not None:
-            _, max_alignment_anchor = target_segment.renumber_tag_anchors(max_alignment_anchor)
+            _, max_alignment_anchor = target_segment.renumber_tag_anchors(1, max_alignment_anchor)
 
-        return max_alignment_anchor[0]  # Return the updated value
+        return max_alignment_anchor  # Return the updated value
 
     @staticmethod
     def assign_tag_idsi(alignable_tags: List[Tag], used_ids: Set[int], next_id: int) -> int:
@@ -271,7 +271,7 @@ class TranslationUnit:
 
         # Check if either of the lists are not empty
         if alignable_tags or alignable_tags2:
-            TranslationUnit.renumber_tag_anchors(max_alignment_anchor)
+            max_alignment_anchor = self.renumber_tag_anchors()
 
         used_tag_ids = TranslationUnit.assign_tag_ids(alignable_tags, alignable_tags2)
 
@@ -287,17 +287,17 @@ class TranslationUnit:
 
         # Process tags in alignable_tags
         for tag in alignable_tags:
-            if tag.AlignmentAnchor > 0:
-                if TranslationUnit.find_aligned_tag(alignable_tags2, tag.AlignmentAnchor) is None:
-                    tag.AlignmentAnchor = 0
+            if tag.alignment_anchor > 0:
+                if TranslationUnit.find_aligned_tag(alignable_tags2, tag.alignment_anchor) is None:
+                    tag.alignment_anchor = 0
             else:
                 flag = True
 
         # Process tags in alignable_tags2
         for tag2 in alignable_tags2:
-            if tag2.AlignmentAnchor > 0:
-                if TranslationUnit.find_aligned_tag(alignable_tags, tag2.AlignmentAnchor) is None:
-                    tag2.AlignmentAnchor = 0
+            if tag2.alignment_anchor > 0:
+                if TranslationUnit.find_aligned_tag(alignable_tags, tag2.alignment_anchor) is None:
+                    tag2.alignment_anchor = 0
             else:
                 flag = True
 

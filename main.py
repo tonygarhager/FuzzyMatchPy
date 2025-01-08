@@ -51,35 +51,40 @@ def main(args):
     # Example Usage
     path = args.tmpath
     query = args.query
+    query_file = args.query_file
 
-    helper = FileBasedTMHelper()
-    results = helper.fuzzy_search(path, query, 5, 70)
+    if query:
+        results = FileBasedTMHelper.fuzzy_search_query(path, query, 5, 70)
 
-    json_res = {}
-    i = 1
-    for result in results.results:
-        title = 'result ' + str(i)
-        data = {}
-        data['Match'] = str(result.scoring_result.match)
-        data['SourceTu'] = str(result.memory_translation_unit.src_segment)
-        data['TargetTu'] = str(result.memory_translation_unit.trg_segment)
-        json_res[title] = data
-        i += 1
+        json_res = {}
+        i = 1
+        for result in results.results:
+            title = 'result ' + str(i)
+            data = {}
+            data['Match'] = str(result.scoring_result.match)
+            data['SourceTu'] = str(result.memory_translation_unit.src_segment)
+            data['TargetTu'] = str(result.memory_translation_unit.trg_segment)
+            json_res[title] = data
+            i += 1
 
-    print(str(json_res))
+        print(str(json_res))
 
-    file_path = "result.json"
+        file_path = "result.json"
 
-    # Write data to JSON file
-    with open(file_path, "w", encoding="utf-8") as json_file:
-        json.dump(json_res, json_file, indent=4, ensure_ascii=False)
+        # Write data to JSON file
+        with open(file_path, "w", encoding="utf-8") as json_file:
+            json.dump(json_res, json_file, indent=4, ensure_ascii=False)
 
-    print('Saved to result.json')
+        print('Saved to result.json')
+
+    if query_file:
+        FileBasedTMHelper.fuzzy_search_file(path, query_file, 5, 70)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script for default arguments.")
     parser.add_argument("--tmpath", type=str, default="test/test.sdltm", help="First argument")
-    parser.add_argument("--query", type=str, default="our belief", help="Second argument")
+    parser.add_argument("--query", type=str, default=None, help="Second argument")
+    parser.add_argument("--query_file", type=str, default="E:\\test.xliff", help="Second argument")
     parser.add_argument("--maxResults", type=int, default=5, help="Second argument")
     parser.add_argument("--minScore", type=int, default=70, help="Second argument")
     args = parser.parse_args()

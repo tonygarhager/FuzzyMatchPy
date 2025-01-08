@@ -1,8 +1,6 @@
 import sqlite3
 from AnnotatedTranslationUnit import AnnotatedTranslationUnit
 from BooleanSettingsWrapper import BooleanSettingsWrapper
-from TMXReaderSettings import TMXReaderSettings
-from TUStreamContext import TUStreamContext
 from TranslationMemory import *
 from Resource import Resource
 from SearchResults import *
@@ -301,7 +299,7 @@ class FileBasedTranslationMemory:
         self.tm = lst[0]
 
     def get_segment_hash(self, s):
-        pass#mod
+        return s.strict_hash
 
     @staticmethod
     def set_search_parameters_static(settings:SearchSettings):
@@ -325,6 +323,184 @@ class FileBasedTranslationMemory:
 
     def set_search_parameters(self):
         return FileBasedTranslationMemory.set_search_parameters_static(self.settings)
+
+    def fuzzy_search_async(self, tmid:int, features, min_score:int, max_hits:int, index:FuzzyIndexes):
+        result = {}
+        for kvp in features.items():
+            list = self.fuzzy_search(tmid, kvp[1], index, min_score, max_hits, False, (2 ** 31) - 1, TuContextData(), True)
+            result[kvp[0]] = list
+        return result
+
+    @staticmethod
+    def apply_origin_normalization(tu:TranslationUnit):
+        if ((tu.origin in (TranslationUnitOrigin.Unknown, TranslationUnitOrigin.ContextTM, TranslationUnitOrigin.AutomaticTranslation)) or
+                (tu.confirmation_level in (ConfirmationLevel.Translated, ConfirmationLevel.ApprovedTranslation, ConfirmationLevel.ApprovedSignOff) and
+                 tu.origin in (TranslationUnitOrigin.AdaptiveMachineTranslation, TranslationUnitOrigin.MachineTranslation, TranslationUnitOrigin.Nmt))):
+            tu.origin = TranslationUnitOrigin.TM
+
+    def set_tu_flags_from_storage(self, tu:TranslationUnit, storage_tu:StoTranslationUnit):
+        tu.origin = storage_tu.origin
+        tu.confirmation_level = storage_tu.confirmation_level
+        FileBasedTranslationMemory.apply_origin_normalization(tu)
+
+    def get_reduced_translation_unit(self, storage_tu:StoTranslationUnit, source_culture:str, target_culture:str) -> TranslationUnit:
+        translation_unit = TranslationUnit()
+        translation_unit.id = storage_tu.id
+        self.deserialize_tu_segments(storage_tu, translation_unit, source_culture, target_culture)
+        self.set_tu_flags_from_storage(translation_unit, storage_tu)
+        translation_unit.src_segment.tokens = TokenSerialization.load_tokens(storage_tu.source_token_data, translation_unit.src_segment)
+        translation_unit.trg_segment.tokens = TokenSerialization.load_tokens(storage_tu.target_token_data, translation_unit.trg_segment)
+        translation_unit.system_fields.creation_date = storage_tu.creation_date
+        translation_unit.system_fields.change_date = storage_tu.change_date
+        return translation_unit
+
+    def add_tu_to_search_results(self, search_tu:AnnotatedTranslationUnit, results:SearchResults, tu:StoTranslationUnit, skip_filters:bool) -> SearchResults:
+        if not any(x.memory_translation_unit.id == tu.id for x in results.results):
+            mem_tu = self.get_reduced_translation_unit(tu, self.tm.languageDirection['srcLang'], self.tm.languageDirection['trgLang'])
+            res = SearchResult(mem_tu)
+            self.anno_tm.source_tools.ensure_tokenized_segment(res.memory_translation_unit.src_segment, False, True)
+            self.anno_tm.target_tools.ensure_tokenized_segment(res.memory_translation_unit.trg_segment, False, True)
+
+            if self.settings.is_concordance_search == False:
+                res.memory_placeables = PlaceableComputer.compute_placeables(mem_tu.src_segment, mem_tu.trg_segment)
+
+            self._scorer.compute_scores(res, search_tu.source, search_tu.target, None, TuContextData(), False, None, False, skip_filters)
+
+            if (res.scoring_result.match >= self.settings.min_score and
+                    (self.settings.mode != SearchMode.ExactSearch or
+                    res.scoring_result.is_exact_match)):
+                results.results.append(res)
+        return results
+
+    def add_fuzzy_candidate_tus_to_results(self, search_tus, index, batch_size, candidate_result_tus, search_results):
+        i = index
+        while i < len(search_tus) and i < index + batch_size:
+            if i in candidate_result_tus.keys():
+                for tu in candidate_result_tus[i]:
+                    search_results[i] = self.add_tu_to_search_results(search_tus[i], search_results[i], tu, True)
+            i += 1
+        return search_results
+
+    def get_exact_batch_matches(self, query:str) -> List[StoTranslationUnit]:
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        results = []
+        for row in rows:
+            results.append(self.read_tu(row))
+        return results
+
+    def exact_search(self, tmid, source_hashes):
+        self._check_version()
+        text = StringUtils.hashes_to_comma_separated_list(source_hashes)
+        query = 'SELECT id, guid, \r\n\t\t\t\tsource_hash, source_segment, target_segment, source_token_data, target_token_data, 0, null, null, flags, creation_date, change_date\r\n                FROM translation_units WHERE translation_memory_id = ' + str(tmid) + ' AND source_hash IN (' + text + ')'
+        return self.get_exact_batch_matches(query)
+
+    def initialize_tu_search_results(self, search_tu:AnnotatedTranslationUnit, results:SearchResults):
+        if search_tu is not None and search_tu.source is not None:
+            results.source_segment = search_tu.source.segment
+
+            # Get segment hash asynchronously
+            num = self.get_segment_hash(search_tu.source)
+            results.source_hash = num
+
+            source_tools = self.anno_tm.source_tools
+            segment = search_tu.source.segment
+            flag = False
+            target = search_tu.target
+
+            # Ensure source segment is tokenized
+            source_tools.ensure_tokenized_segment(
+                segment, flag, target.segment if target is not None else None
+            )
+
+            if search_tu.target is not None:
+                # Ensure target segment is tokenized
+                self.anno_tm.target_tools.ensure_tokenized_segment(
+                    search_tu.target.segment, False, True
+                )
+                results.document_placeables = PlaceableComputer.compute_placeables(
+                    search_tu.source.segment, search_tu.target.segment
+                )
+            else:
+                results.document_placeables = PlaceableComputer.compute_placeables(
+                    search_tu.source.segment, None
+                )
+
+    def add_exact_candidate_tus_to_results(self, search_tus:List[AnnotatedTranslationUnit], index, batch_size, candidate_result_tus:List[StoTranslationUnit], batch_results):
+        i = index
+        while i < len(search_tus) and i < index + batch_size:
+            if search_tus[i] is not None:
+                batch_results.append(SearchResult())
+                num = self.get_segment_hash(search_tus[i].source)
+                single_tu_candidates = [
+                    x for x in candidate_result_tus
+                    if x is not None and x.source.hash == num
+                ]
+                self.initialize_tu_search_results(search_tus[i], batch_results[i])
+                for translation_unit in single_tu_candidates:
+                    self.add_tu_to_search_results(search_tus[i], batch_results[i], translation_unit, True)
+            else:
+                batch_results.append(None)
+            i += 1
+
+    def exact_search_batch(self, tus:List[AnnotatedTranslationUnit], batch_size:int) -> List[SearchResults]:
+        results = []
+        index = 0
+        while index < len(tus):
+            batch_results = []
+            hashes = []
+            i = index
+            while i < len(tus) and i < index + batch_size:
+                flag = tus[i] is not None
+                if flag:
+                    num = self.get_segment_hash(tus[i].source)
+                    flag = num not in hashes
+                if flag:
+                    num = self.get_segment_hash(tus[i].source)
+                    hashes.append(num)
+
+                i += 1
+            lst2 = self.exact_search(self.tm.id, hashes)
+            self.add_exact_candidate_tus_to_results(tus, index, batch_size, lst2, batch_results)
+            results.extend(batch_results)
+            index += batch_size
+        return results
+
+    def fuzzy_search_batch(self, settings:SearchSettings, tus:List[AnnotatedTranslationUnit], batch_size:int, tu_indexes_to_fuzzy_search:[]):
+        self.settings = settings
+
+        if self.settings.mode == SearchMode.ConcordanceSearch or self.settings.mode == SearchMode.TargetConcordanceSearch:
+            self._default_sort_order = SortSpecification(SearchResults.default_sort_order_concordance)
+            self._scorer = Scorer(self.anno_tm, self.settings, True)
+        else:
+            self._default_sort_order = SortSpecification(SearchResults.default_sort_order)
+            flag = self.settings.find_penalty(PenaltyType.CharacterWidthDifference) != None
+            self._scorer = Scorer(self.anno_tm, self.settings, flag)
+
+        results = self.exact_search_batch(tus, batch_size)
+        self.set_exact_match_context(tus, results)
+        self.populate_results_and_apply_filters(results, self.field_declaration, tus, True, False)
+
+        word_idx = FuzzyIndexes.SourceWordBased
+        char_idx = FuzzyIndexes.SourceCharacterBased
+        adjusted_min_score = max(SearchSettings.min_score_lower_bound, self.settings.min_score - 20)
+        adjusted_max_results = max(20, self.settings.max_results)
+        if (self.tm.fuzzy_indexes & word_idx) != 0:
+            index = 0
+            while index < len(tus):
+                batch_features = {}
+                i = index
+                while i < len(tus) and i < index + batch_size:
+                    if i in tu_indexes_to_fuzzy_search:
+                        num = i
+                        list = tus[i].source.tm_feature_vector
+                        batch_features[num] = list
+                    i += 1
+
+                dictionary2 = self.fuzzy_search_async(self.tm.id, batch_features, adjusted_min_score, adjusted_max_results, word_idx)
+                results = self.add_fuzzy_candidate_tus_to_results(tus, index, batch_size, dictionary2, results)
+                index += batch_size
+        #################
 
     def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit) -> SearchResults:
         self.settings = settings

@@ -131,7 +131,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
 
     @property
     def strict_hash(self):
-        AbstractAnnotatedSegment.get_strict_hash(self._strict_identity_string)
+        return AbstractAnnotatedSegment.get_strict_hash(self.strict_identity_string)
 
     @property
     def strict_identity_string(self):

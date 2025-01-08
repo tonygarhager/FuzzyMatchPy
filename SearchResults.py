@@ -11,7 +11,7 @@ from TuContext import *
 from functools import cmp_to_key
 
 class SearchResult:
-    def __init__(self, tm_tu:TranslationUnit):
+    def __init__(self, tm_tu:TranslationUnit = None):
         self.memory_translation_unit = tm_tu
         self.metadata = {}
         self.scoring_result:ScoringResult = None

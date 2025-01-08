@@ -7,6 +7,8 @@ from typing import Tuple
 from enum import Enum
 import ctypes
 from ctypes import wintypes
+from typing import Iterable
+
 class LPNLSVERSIONINFO(ctypes.Structure):
     _fields_ = [
         ("dwNLSVersionInfoSize", wintypes.DWORD),  # Size of the structure
@@ -628,6 +630,9 @@ class StringUtils:
     @staticmethod
     def escape_fn(c):
         return c.replace('\\', '\\\\')
+    @staticmethod
+    def hashes_to_comma_separated_list(hashes: Iterable[int]) -> str:
+        return ",".join(str(num) for num in hashes)
 
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True
