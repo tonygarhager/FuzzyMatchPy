@@ -146,7 +146,7 @@ class SimilarityComputers:
 
         edit_distance_computer = EditDistanceComputer(similarity_computer, apply_small_change_adjustment)
         edit_distance = edit_distance_computer.compute_edit_distance(list(a), list(b))
-        return edit_distance.get_score()
+        return edit_distance.score
 
     @staticmethod
     def get_placeable_similarity(a: Token, b: Token, disabled_auto_substitutions: int) -> float:

@@ -308,10 +308,10 @@ class FileBasedTranslationMemory:
         max_tu_id = None
         last_change_date = None
 
-        if settings.sort_spec is not None:
+        if settings.sort_specification is not None:
             # Check if all criteria directions are not ascending and field name is not "chd"
             flag = all(criterion.direction != SortDirection.Ascending or criterion.field_name != "chd" for criterion in
-                       settings.sort_spec.criteria)
+                       settings.sort_specification.criteria)
 
         descending_order = flag
         max_tu_id = float('inf') if descending_order else -1
@@ -466,6 +466,122 @@ class FileBasedTranslationMemory:
             index += batch_size
         return results
 
+    def get_source_segment_hash(self, tu):
+        if tu is None or tu.source is None:
+            return -1
+        else:
+            return self.get_segment_hash(tu.source)
+
+    def set_exact_match_context_preceding_and_following_source(self, tus, results):
+        context = 0
+        if len(tus) > 1:
+            num2 = self.get_source_segment_hash(tus[1])
+        else:
+            num2 = -1
+
+        for search_result in results[0].results:
+            search_result.context_data = TuContext(context, num2)
+
+        for i in range(1, len(tus)):
+            if i - 1 >= 0:
+                context = self.get_source_segment_hash(tus[i - 1])
+            else:
+                context = -1
+
+            if i + 1 < len(tus):
+                num2 = self.get_source_segment_hash(tus[i + 1])
+            else:
+                num2 = 0
+
+            for search_result in results[i].results:
+                search_result.context_data = TuContext(context, num2)
+
+    def set_tu_context_previous_m(self, one_tu_result, previous_tu):
+        previous_tu2 = previous_tu
+        if previous_tu2 and previous_tu2.source:
+            context = self.get_segment_hash(previous_tu2.source)
+        else:
+            context = -1
+
+        previous_tu3 = previous_tu
+        if previous_tu3 and previous_tu3.target and previous_tu3.target.segment and previous_tu3.target.segment.elements:
+            num2 = self.get_segment_hash(previous_tu.target)
+        else:
+            num2 = 0
+
+        if num2 != 0:
+            if (
+                    self.settings
+                    and self.settings.context_confirmation_levels
+                    and len(self.settings.context_confirmation_levels) > 0
+            ):
+                if (
+                        previous_tu
+                        and previous_tu.translation_unit
+                        and not any(
+                    x == previous_tu.translation_unit.confirmation_level
+                    for x in self.settings.context_confirmation_levels
+                )
+                ):
+                    num2 = -1
+
+        tu_context = TuContext(context, num2)
+        one_tu_result.context_data = tu_context
+
+    def set_tu_context_previous(self, all_tu_results, previous_tu):
+        for search_result in all_tu_results.results:
+            self.set_tu_context_previous_m(search_result, previous_tu)
+
+    def set_exact_match_context_preceding_source_and_target(self, tus, results):
+        if len(results) > 0:
+            search_results = results[0]
+            if search_results and len(search_results.results) > 0:
+                for search_result in search_results.results:
+                    search_result.context_data = TuContext(0, 0)
+
+        for i in range(1, len(tus)):
+            search_results = results[i]
+            if search_results and len(search_results) > 0:
+                if search_results and len(search_results.results) > 0:
+                    self.set_tu_context_previous(results[i], tus[i - 1])
+
+    def set_exact_match_context(self, tus, results):
+        text_context_match_type = self.anno_tm.tm.text_context_match_type
+
+        if text_context_match_type == TextContextMatchType.PrecedingAndFollowingSource:
+            self.set_exact_match_context_preceding_and_following_source(tus, results)
+        elif text_context_match_type == TextContextMatchType.PrecedingSourceAndTarget:
+            self.set_exact_match_context_preceding_source_and_target(tus, results)
+
+    def drop_results_below_minimum_score(self, batch_results):
+        for search_results in batch_results:
+            if search_results is not None:
+                # Remove results with a match score below the minimum threshold
+                search_results.results = [
+                    x for x in search_results.results
+                    if x.scoring_result.match >= self.settings.min_score
+                ]
+
+                # Sort results based on specified sort specification or default order
+                if (self.settings.sort_specification and
+                        len(self.settings.sort_specification) > 0 and
+                        len(search_results.results) > 1):
+                    search_results.sort(self.settings.sort_specification)
+                else:
+                    search_results.sort(self._default_sort_order)
+
+
+
+    def populate_results_and_apply_filters(self, batch_results, fields, tus, check_cm,
+                                                 prefer_search_result_target_for_context):
+        self.drop_results_below_minimum_score(batch_results)
+        #self.populate_results(batch_results, fields, tus, check_cm, prefer_search_result_target_for_context)
+
+        #if self.settings.hard_filter is not None:
+        #    self.apply_hard_filters(batch_results)
+
+        #self.apply_soft_filters(batch_results)
+
     def fuzzy_search_batch(self, settings:SearchSettings, tus:List[AnnotatedTranslationUnit], batch_size:int, tu_indexes_to_fuzzy_search:[]):
         self.settings = settings
 
@@ -480,6 +596,14 @@ class FileBasedTranslationMemory:
         results = self.exact_search_batch(tus, batch_size)
         self.set_exact_match_context(tus, results)
         self.populate_results_and_apply_filters(results, self.field_declaration, tus, True, False)
+
+        fuzzy_results = []
+        for i in range(len(tus)):
+            fuzzy_results.append(SearchResults())
+            if results[i] is not None:
+                fuzzy_results[i].source_segment = results[i].source_segment
+                fuzzy_results[i].source_hash = results[i].source_hash
+                fuzzy_results[i].document_placeables = results[i].document_placeables
 
         word_idx = FuzzyIndexes.SourceWordBased
         char_idx = FuzzyIndexes.SourceCharacterBased
@@ -498,9 +622,25 @@ class FileBasedTranslationMemory:
                     i += 1
 
                 dictionary2 = self.fuzzy_search_async(self.tm.id, batch_features, adjusted_min_score, adjusted_max_results, word_idx)
-                results = self.add_fuzzy_candidate_tus_to_results(tus, index, batch_size, dictionary2, results)
+                fuzzy_results = self.add_fuzzy_candidate_tus_to_results(tus, index, batch_size, dictionary2, fuzzy_results)
                 index += batch_size
         #################
+        #SearchResults.post_merge_fixup(fuzzy_results, self.settings)
+        for result in fuzzy_results:
+            for rs in result.results:
+                tag_changed = False
+                for i in range(len(rs.scoring_result.edit_distance.items)):
+                    tok = rs.memory_translation_unit.src_segment.tokens[i]
+                    ed_item = rs.scoring_result.edit_distance.items[i]
+
+                    if isinstance(tok, TagToken) and ed_item.operation != EditOperation.Identity:
+                        tag_changed = True
+                        break
+                if tag_changed:
+                    penalty = settings.find_penalty(PenaltyType.MemoryTagsDeleted)
+                    if penalty is not None:
+                        rs.scoring_result.apply_penalty(penalty)
+        return fuzzy_results
 
     def search_translation_unit(self, settings:SearchSettings, tu: TranslationUnit) -> SearchResults:
         self.settings = settings
@@ -525,7 +665,7 @@ class FileBasedTranslationMemory:
         if settings.max_results < 1:
             settings.max_results = 1
 
-        search_results = SearchResults(settings.sort_spec)
+        search_results = SearchResults(settings.sort_specification)
 
         if flag:
             anno_tm.target_tools.ensure_tokenized_segment(tu.trg_segment)
@@ -575,9 +715,9 @@ class FileBasedTranslationMemory:
         search_results.results = [r for r in search_results.results if r.scoring_result.match >= self.settings.min_score]
 
         # Check if SortSpecification is not None and contains sort criteria
-        if self.settings.sort_spec and len(self.settings.sort_spec) > 0 and len(search_results.results) > 1:
+        if self.settings.sort_specification and len(self.settings.sort_specification) > 0 and len(search_results.results) > 1:
             # Perform sorting based on SortSpecification
-            search_results.sort(self.settings.sort_spec)
+            search_results.sort(self.settings.sort_specification)
         else:
             # Perform default sorting
             search_results.sort(self._default_sort_order)

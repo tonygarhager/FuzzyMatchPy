@@ -88,7 +88,8 @@ class EditDistance:
     def sort(self):
         self.items.sort(key=self.sort_delegate)
 
-    def get_score(self) -> float:
+    @property
+    def score(self) -> float:
         num = self.source_object_count + self.target_object_count
         num -= sum(1 for item in self.items if
                    item.operation == EditOperation.Insert and item.resolution == EditDistanceResolution.Deletion)

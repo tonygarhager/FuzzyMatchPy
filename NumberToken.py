@@ -69,7 +69,7 @@ class Unit(Enum):
     Currency = 55
     NoUnit = 56
 
-class NumberToken(Token):
+class NumberToken(Token, ILocalizableToken):
     standard_digits = [str(i) for i in range(10)]
     def __init__(self, text:str, group_separator:NumericSeparator,
                  decimal_separator:NumericSeparator,

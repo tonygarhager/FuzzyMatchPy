@@ -20,7 +20,7 @@ class ScoringResult:
         self.is_structure_context_match:bool = False
         self.id_context_match:bool = False
         self.resolved_placeables:int = 0
-        self.text_placements:int = 0
+        self.text_replacements:int = 0
         self.placeable_format_changes:int = 0
         self.matching_concordance_ranges:List[SegmentRange] = None
         self.applied_penalties:List[AppliedPenalty] = None
@@ -40,6 +40,10 @@ class ScoringResult:
             if num >= 0:
                 return num
             return 0
+
+    @property
+    def is_full_cm(self):
+        return self.text_context_match == TextContextMatch.SourceTargetMatch or self.text_context_match == TextContextMatch.PrecedingAndFollowingSourceMatch
 
     def find_penalty(self, pt:PenaltyType) -> AppliedPenalty:
         if not self.applied_penalties:

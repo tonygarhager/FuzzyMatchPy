@@ -23,6 +23,13 @@ class TokenType:
     Tag = 17
     AlphaNumeric = 18
 
+class ILocalizableToken:
+    def __init__(self):
+        pass
+
+    def does_format_match(self, other)->bool:
+        return False
+
 class Token(SegmentElement, ABC):
     def __init__(self, text:str = None, culture_name:str = None):
         self.culture_name = culture_name

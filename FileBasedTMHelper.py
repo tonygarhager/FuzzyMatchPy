@@ -7,6 +7,7 @@ from SearchSettings import *
 from bs4 import BeautifulSoup as BS
 from bs4.element import NavigableString
 from Tag import *
+import csv
 
 class FileBasedTMHelper:
     @staticmethod
@@ -20,7 +21,11 @@ class FileBasedTMHelper:
     @staticmethod
     def get_search_setting_full(_max_results, _min_score) -> SearchSettings:
         mode = SearchMode.FullSearch
-        return SearchSettings(mode, _max_results, _min_score)
+        settings = SearchSettings(mode, _max_results, _min_score)
+        settings.is_document_search = True
+        settings.add_penalty(PenaltyType.MemoryTagsDeleted, 5)
+        settings.add_penalty(PenaltyType.Alignment, 1)
+        return settings
 
     @staticmethod
     def create_segment(item, lang) -> Segment:
@@ -74,10 +79,35 @@ class FileBasedTMHelper:
         anno_tm = tm.get_annotated_translation_memory(tm.tm.id)
         tm.anno_tm = anno_tm
 
+        out_data = []
+        ccc = 0
         for tu in tus:
+            ccc += 1
+            if ccc >= 20:
+                break
             anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
             settings = FileBasedTMHelper.get_search_setting_full(5, 70)
             tu_indexes_to_fuzzy_search = [0]
             tus_ = [anno_tu]
             search_results = tm.fuzzy_search_batch(settings, tus_, 100, tu_indexes_to_fuzzy_search)
+            one_line = []
+            one_line.append(str(tu.src_segment))
+            one_line.append(str(tu.trg_segment))
+
+            if search_results is not None and len(search_results) > 0 and len(search_results[0].results) > 0:
+                one_line.append(str(search_results[0].results[0].scoring_result.match))
+                one_line.append(str(search_results[0].results[0].memory_translation_unit.src_segment))
+                one_line.append(str(search_results[0].results[0].memory_translation_unit.trg_segment))
+            else:
+                one_line.append(' ')
+                one_line.append(' ')
+                one_line.append(' ')
+            out_data.append(one_line)
+
+        with open('output.csv', mode='w', newline='', encoding="utf-8") as file:
+            writer = csv.writer(file)
+
+            # Write the rows to the CSV file
+            writer.writerows(out_data)
+
 

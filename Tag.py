@@ -86,9 +86,9 @@ class Tag(SegmentElement):
                 return SegmentElement.Similarity.IdenticalType
             return SegmentElement.Similarity.IdenticalValueAndType
         else:
-            if self.tagid is None and other.tagid is None:
+            if self.tagid is None or other.tagid is None:
                 return SegmentElement.Similarity.IdenticalType
-            if self.tagid == other.tagid:
+            if self.tagid != other.tagid:
                 return SegmentElement.Similarity.IdenticalType
             return SegmentElement.Similarity.IdenticalValueAndType
 

@@ -1,3 +1,4 @@
+from AutoLocalizationSettings import AutoLocalizationSettings
 from SortSpecification import *
 from Penalty import *
 
@@ -19,11 +20,14 @@ class SearchSettings:
         self.mode = _mode
         self.max_results = _max_results
         self.min_score = _min_score
-        self.sort_spec: SortSpecification = None
+        self.sort_specification: SortSpecification = None
         self.check_matching_sub_languages = False
         self.advanced_tokenization_legacy_scoring = False
         self.penalties = None
         self.filters = None
+        self.auto_localization_settings = AutoLocalizationSettings()
+        self.current_structure_context = None
+        self.context_confirmation_levels = None
 
     @property
     def is_concordance_search(self) -> bool:
