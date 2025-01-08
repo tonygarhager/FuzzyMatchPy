@@ -57,6 +57,7 @@ class Token(SegmentElement, ABC):
     def set_token_type(self, type:TokenType):
         pass
 
+    @property
     def is_punctuation(self):
         return (self.type == TokenType.GeneralPunctuation or
                 self.type == TokenType.OpeningPunctuation or

@@ -25,12 +25,26 @@ class EditDistanceItem:
         self.move_source_target = 0
         self.move_target_source = 0
 
+    def __str__(self) -> str:
+        if self.operation == EditOperation.Identity:
+            return f"=({self.source},{self.target})"
+        elif self.operation == EditOperation.Change:
+            return f"c({self.source},{self.target})"
+        elif self.operation == EditOperation.Move:
+            return f"m({self.source},{self.target},{self.move_source_target},{self.move_target_source})"
+        elif self.operation == EditOperation.Insert:
+            return f"i({self.source},{self.target})"
+        elif self.operation == EditOperation.Delete:
+            return f"d({self.source},{self.target})"
+        else:
+            raise ValueError("Invalid operation type")
+
 class EditDistance:
     def __init__(self, source_object_count:int, target_object_count:int, distance:float):
         self.source_object_count = source_object_count
         self.target_object_count = target_object_count
         self.distance = distance
-        self.items = List[EditDistanceItem]
+        self.items = []
 
     def __getitem__(self, item):
         return self.items[item]

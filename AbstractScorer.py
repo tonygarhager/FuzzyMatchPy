@@ -117,14 +117,13 @@ class AbstractScorer(ABC):
         apply_small_change_adjustment = AbstractScorer.apply_small_change_adjustment(doc_src_segment.segment.culture_name)
         segment_edit_distance_computer = SegmentEditDistanceComputer()
         disable_auto_substitutions = BuiltinRecognizers.RecognizeNone
-        result.edit_distance, _ = (
-            segment_edit_distance_computer.compute_edit_distance(doc_src_segment.segment.tokens,
+        result.edit_distance, _ = segment_edit_distance_computer.compute_edit_distance(doc_src_segment.segment.tokens,
                                                                  search_result.memory_translation_unit.src_segment.tokens,
                                                                  is_duplicate_search,
                                                                  disable_auto_substitutions,
                                                                  characters_normalize_safely,
                                                                  apply_small_change_adjustment,
-                                                                 is_duplicate_search or score_diagonal_only))
+                                                                 is_duplicate_search or score_diagonal_only)
         result.resolved_placeables = 0
         self.target_tools.stem(search_result.memory_translation_unit.trg_segment)
         if search_result.memory_placeables is None:

@@ -54,10 +54,18 @@ class StoTranslationUnit:
         self.attributes = []
         self.contexts = TuContexts()
         self.id_contexts = TuIdContexts()
+        self.separate_flags(flags)
 
     @staticmethod
     def normalize_date(date: datetime) -> datetime:
         return date.replace(microsecond=0)
+
+    def separate_flags(self, value:int):
+        self.origin = value & 0xff
+        value >>= 8
+        self.format = value & 0xff
+        value >>= 8
+        self.confirmation_level = value & 0xff
 
     def add_context(self, left_source: Optional[int] = None, left_target: Optional[int] = None):
         if left_source is not None and left_target is not None:

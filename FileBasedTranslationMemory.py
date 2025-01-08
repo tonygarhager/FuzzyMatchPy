@@ -386,7 +386,7 @@ class FileBasedTranslationMemory:
         rows = self.cursor.fetchall()
         results = []
         for row in rows:
-            results.append(self.read_tu(row))
+            results.append(self.read_tu_batch_search(row))
         return results
 
     def exact_search(self, tmid, source_hashes):
@@ -430,7 +430,7 @@ class FileBasedTranslationMemory:
         i = index
         while i < len(search_tus) and i < index + batch_size:
             if search_tus[i] is not None:
-                batch_results.append(SearchResult())
+                batch_results.append(SearchResults())
                 num = self.get_segment_hash(search_tus[i].source)
                 single_tu_candidates = [
                     x for x in candidate_result_tus
@@ -776,6 +776,32 @@ class FileBasedTranslationMemory:
                 None,
                 get_int(7),
             )
+
+    def read_tu_batch_search(self, row) -> StoTranslationUnit:
+        def get_int(idx):
+            return None if row[idx] is None else int(row[idx])
+
+        def get_string(idx):
+            return None if row[idx] is None else str(row[idx])
+
+        def get_bytes(idx):
+            return None if row[idx] is None else row[idx]
+
+        def get_date(idx):
+            return None if row[idx] is None else datetime.fromisoformat(row[idx])
+
+        return StoTranslationUnit(get_int(0), get_string(1), 0,
+                                  StoSegment(get_int(2), 0, get_string(3)),
+                                  StoSegment(0, 0, get_string(4)),
+                                  get_date(11), '',
+                                  get_date(12), '',
+                                  datetime.utcnow(), '',
+                                  0,
+                                  get_int(10),
+                                  get_bytes(5),
+                                  get_bytes(6),
+                                  None, None, None,
+                                  get_int(7))
 
     def read_tu(self, row)->StoTranslationUnit:
         #mod if self.has_flag == False:
