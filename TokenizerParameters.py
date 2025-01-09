@@ -46,7 +46,7 @@ class TokenizerParameters:
         if (setup.builtin_recognizers & BuiltinRecognizers.RecognizeTimes) != BuiltinRecognizers.RecognizeNone:
             self.add_recognizer(DateTimeRecognizer.create(settings, access, culture_name, DateTimePatternType.ShortTime | DateTimePatternType.LongTime, 75))
         if (setup.builtin_recognizers & BuiltinRecognizers.RecognizeNumbers) != BuiltinRecognizers.RecognizeNone:
-            self.add_recognizer(NumberFSTRecognizer.create(settings, access, culture_name, 70))
+            self.add_recognizer(NumberFSTRecognizer.load(settings, culture_name, 70, access.accessor))
         if (setup.builtin_recognizers & BuiltinRecognizers.RecognizeAlphaNumeric) != BuiltinRecognizers.RecognizeNone:
             recognizer = AlphanumRecognizer(settings, 60, culture_name)
             self.add_recognizer(recognizer)

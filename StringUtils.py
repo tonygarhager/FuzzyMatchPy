@@ -633,6 +633,9 @@ class StringUtils:
     @staticmethod
     def hashes_to_comma_separated_list(hashes: Iterable[int]) -> str:
         return ",".join(str(num) for num in hashes)
+    @staticmethod
+    def is_korean_char(c):
+        return ('ᄀ' <= c <= 'ᇿ') or ('가' <= c <= '힣')
 
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True

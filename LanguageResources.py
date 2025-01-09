@@ -1,5 +1,5 @@
 from ResourceStorage import *
-from LanguageResource import *
+from Resource import *
 from Wordlist import Wordlist
 from StemmingRuleSet import *
 

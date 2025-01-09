@@ -74,6 +74,9 @@ class Recognizer(ABC):
                 StringUtils.is_symbol(c) or
                 (break_on_cjk and StringUtils.is_cjk_char(c)))
 
+    def get_signature(self, culture):
+        return ""
+
     @abstractmethod
     def recognize(self, s: str, from_idx: int, allow_token_bundles: bool, consumed_length: int) -> Tuple[Token, int]:
         pass

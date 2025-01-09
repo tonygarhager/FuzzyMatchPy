@@ -10,6 +10,7 @@ from Tag import *
 import csv
 
 class FileBasedTMHelper:
+    last_id = 0
     @staticmethod
     def get_search_setting(_target, _max_results, _min_score) -> SearchSettings:
         if _target:
@@ -31,20 +32,23 @@ class FileBasedTMHelper:
     def create_segment(item, lang) -> Segment:
         segment = Segment(lang)
         anchor = 1
+        last_id = 0
         for child in item:
             if isinstance(child, NavigableString):
                 segment.add_text(child)
             elif child.name == 'x':
-                id = str(int(child.attrs['id']) - 1)
+                id = str(int(child.attrs['id']) - 1 + FileBasedTMHelper.last_id)
+                last_id = int(id)
                 segment.add(Tag(TagType.Standalone, id, anchor))
                 anchor += 1
             elif child.name == 'g':
-                id = str(int(child.attrs['id']) - 1)
-                segment.add(Tag(TagType.Start, id))
+                id = str(int(child.attrs['id']) - 1 + FileBasedTMHelper.last_id)
+                last_id = int(id)
+                segment.add(Tag(TagType.Start, id, anchor))
                 segment.add_text(child.text)
                 segment.add(Tag(TagType.End, id, anchor))
                 anchor += 1
-
+        FileBasedTMHelper.last_id = last_id + 1
         return segment
     @staticmethod
     def get_translation_units_from_xliff(fn:str) -> List[TranslationUnit]:
@@ -83,8 +87,8 @@ class FileBasedTMHelper:
         ccc = 0
         for tu in tus:
             ccc += 1
-            if ccc >= 20:
-                break
+            if ccc < 5:
+                continue
             anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
             settings = FileBasedTMHelper.get_search_setting_full(5, 70)
             tu_indexes_to_fuzzy_search = [0]

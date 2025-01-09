@@ -2,7 +2,7 @@ import io
 import base64
 from ResourceReader import ResourceReader
 from CultureInfoExtensions import CultureInfoExtensions
-from LanguageResource import *
+from Resource import *
 from Wordlist import Wordlist
 
 class ResourceStatus:
