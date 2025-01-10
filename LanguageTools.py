@@ -1,5 +1,6 @@
 from LanguageResources import LanguageResources
 from Snowball import SnowballWrapper
+from Stemmer_en import Stemmer_en
 from Tokenizer import *
 from Segment import Segment
 from typing import Tuple
@@ -128,8 +129,12 @@ class LanguageTools:
         if self._stemmer is not None:
             return self._stemmer
         if self._use_alternate_stemmers:
-            rule_based_stemmer = RuleBasedStemmer.create(self._resources, False)
-            t = rule_based_stemmer
+            ci = StringUtils.get_iso_language_code(self._resources.culture_name)
+            if ci == 'en':
+                t = Stemmer_en()
+                t.strips_diacritics = False
+            else:
+                t = RuleBasedStemmer.create(self._resources, False)
             snowball_wrapper = SnowballWrapper.create(self._resources.culture_name, t)
 
             if snowball_wrapper is not None:

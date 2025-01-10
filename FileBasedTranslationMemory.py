@@ -625,7 +625,6 @@ class FileBasedTranslationMemory:
                 fuzzy_results = self.add_fuzzy_candidate_tus_to_results(tus, index, batch_size, dictionary2, fuzzy_results)
                 index += batch_size
         #################
-        #SearchResults.post_merge_fixup(fuzzy_results, self.settings)
         for result in fuzzy_results:
             multiple_translation_penalty = False
             if len(result.results) > 1:
@@ -635,7 +634,7 @@ class FileBasedTranslationMemory:
                         exact_match += 1
                 if exact_match > 1:
                     multiple_translation_penalty = True
-
+            result.results.sort(key=lambda fuzzy_result: fuzzy_result.scoring_result.match, reverse=True)
             for rs in result.results:
                 tag_changed = False
                 for i in range(len(rs.scoring_result.edit_distance.items)):

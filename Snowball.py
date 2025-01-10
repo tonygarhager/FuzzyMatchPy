@@ -1,6 +1,47 @@
 import logging
 from typing import List, Callable, Optional, Dict
 
+class Among:
+    def __init__(self, search_string: str, match_index: int, result: int, action=None):
+        self.search_string = search_string
+        self.match_index = match_index
+        self.result = result
+        self.action = action
+
+    def __str__(self):
+        return self.search_string
+
+    @property
+    def search_string(self):
+        return self._search_string
+
+    @search_string.setter
+    def search_string(self, value):
+        self._search_string = value
+
+    @property
+    def match_index(self):
+        return self._match_index
+
+    @match_index.setter
+    def match_index(self, value):
+        self._match_index = value
+
+    @property
+    def result(self):
+        return self._result
+
+    @result.setter
+    def result(self, value):
+        self._result = value
+
+    @property
+    def action(self):
+        return self._action
+
+    @action.setter
+    def action(self, value):
+        self._action = value
 
 class Env:
     def __init__(self, other=None):
@@ -88,9 +129,8 @@ class Stemmer(Env):
     def out_grouping(self, s: str, min_char: int, max_char: int, repeat: bool) -> int:
         while self.cursor < self.limit:
             c = self.current[self.cursor]
-            if ord(c) < min_char or ord(c) > max_char or c in s:
-                self.cursor += 1
-                continue
+            if ord(c) >= min_char and ord(c) <= max_char and c in s:
+                return 1
             self.cursor += 1
             if not repeat:
                 return 0

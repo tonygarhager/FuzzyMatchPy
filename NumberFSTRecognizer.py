@@ -223,23 +223,33 @@ class NumberFSTRecognizer(Recognizer):
                 if not ('0' <= c3 <= '9'):
                     if c3 <= 'G':
                         if c3 == 'D':
-                            pass  # skip to next case
+                            if numeric_separator2 == NumericSeparator.Non:
+                                if separator_combinations_computed is not None and len(separator_combinations_computed) > 0:
+                                    c2 = c5
+                                numeric_separator2 = NumericSeparator.Primary
+                            num = 2
+                            continue
                         elif c3 == 'G':
-                            pass
+                            if numeric_separator != NumericSeparator.Non:
+                                continue
+                            if separator_combinations_computed and len(separator_combinations_computed) > 0:
+                                c = c5
+                            numeric_separator = NumericSeparator.Primary
+                            continue
                     else:
                         if c3 == 'd':
-                            pass
+                            if numeric_separator2 == NumericSeparator.Non:
+                                numeric_separator2 = NumericSeparator.Alternate
+                                c2 = c5
+                            num = 2
+                            continue
                         elif c3 == 'g':
-                            pass
-                    if numeric_separator != NumericSeparator.Non:
-                        continue
-                    if separator_combinations_computed and len(separator_combinations_computed) > 0:
-                        c = c5
-                    if c3 == 'g':
-                        numeric_separator = NumericSeparator.Alternate
-                        c = c5
-                        continue
-                    numeric_separator = NumericSeparator.Primary
+                            if numeric_separator != NumericSeparator.Non:
+                                continue
+                            numeric_separator = NumericSeparator.Alternate
+                            c = c5
+                            continue
+                    raise Exception(f"Unexpected input in {surface}/{output} at position {i}")
                 else:
                     string_builder2.append(c3)
                     num = 1

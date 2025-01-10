@@ -55,7 +55,7 @@ class FileBasedTMHelper:
     def get_translation_units_from_xliff(fn:str) -> List[TranslationUnit]:
         with open(fn, 'r', encoding='utf-8') as file:
             xml = file.read()
-        soup = BS(xml)
+        soup = BS(xml,features="lxml")
         lst = []
         for file in soup.find_all('file'):
             src_lang = file.attrs['source-language']
@@ -91,19 +91,29 @@ class FileBasedTMHelper:
             tu_indexes_to_fuzzy_search = [0]
             tus_ = [anno_tu]
             search_results = tm.fuzzy_search_batch(settings, tus_, 100, tu_indexes_to_fuzzy_search)
-            one_line = []
-            one_line.append(str(tu.src_segment))
-            one_line.append(str(tu.trg_segment))
+
 
             if search_results is not None and len(search_results) > 0 and len(search_results[0].results) > 0:
-                one_line.append(str(search_results[0].results[0].scoring_result.match))
-                one_line.append(str(search_results[0].results[0].memory_translation_unit.src_segment))
-                one_line.append(str(search_results[0].results[0].memory_translation_unit.trg_segment))
+                for i in range(len(search_results[0].results)):
+                    one_line = []
+                    if i == 0:
+                        one_line.append(tu.src_segment.to_print_str())
+                        one_line.append(tu.trg_segment.to_print_str())
+                    else:
+                        one_line.append(' ')
+                        one_line.append(' ')
+                    one_line.append(str(search_results[0].results[i].scoring_result.match))
+                    one_line.append(search_results[0].results[i].memory_translation_unit.src_segment.to_print_str())
+                    one_line.append(search_results[0].results[i].memory_translation_unit.trg_segment.to_print_str())
+                    out_data.append(one_line)
             else:
+                one_line = []
+                one_line.append(tu.src_segment.to_print_str())
+                one_line.append(tu.trg_segment.to_print_str())
                 one_line.append(' ')
                 one_line.append(' ')
                 one_line.append(' ')
-            out_data.append(one_line)
+                out_data.append(one_line)
 
         with open('output.csv', mode='w', newline='', encoding="utf-8-sig") as file:
             writer = csv.writer(file)

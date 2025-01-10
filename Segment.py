@@ -145,6 +145,23 @@ class Segment:
                 sb += str(element)
         return sb
 
+    def to_print_str(self):
+        sb = ''
+        if self.elements is None:
+            return sb
+        for element in self.elements:
+            if element is not None:
+                if isinstance(element, Text):
+                    sb += str(element)
+                elif isinstance(element, Tag):
+                    if element.type == TagType.Standalone or element.type == TagType.TextPlaceholder or element.type == TagType.LockedContent:
+                        sb += '[x]'
+                    elif element.type == TagType.Start:
+                        sb += '[g>'
+                    elif element.type == TagType.End:
+                        sb += '<g]'
+        return sb
+
     def to_plain(self, tolower:bool, tobase:bool) -> Tuple[str, List[SegmentPosition]]:
         sb = ''
         ranges = []
