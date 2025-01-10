@@ -85,13 +85,7 @@ class FileBasedTMHelper:
         tm.anno_tm = anno_tm
 
         out_data = []
-        ccc = 0
         for tu in tus:
-            ccc += 1
-            if ccc < 12:
-                continue
-            print(ccc)
-            print(str(tu.src_segment))
             anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
             settings = FileBasedTMHelper.get_search_setting_full(5, 70)
             tu_indexes_to_fuzzy_search = [0]

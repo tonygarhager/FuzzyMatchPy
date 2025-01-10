@@ -104,7 +104,6 @@ class SegmentEditDistanceComputer:
         num = 0
         i = 0
         while i < len(result.items):
-            print(i)
             operation = result.items[i].operation
             if operation == EditOperation.Delete or operation == EditOperation.Insert:
                 num2 = num3 = num4 = num5 = 0
