@@ -99,7 +99,7 @@ class FileBasedTranslationMemory:
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
 
-        lst = []
+        resource_map = {}
         for row in rows:
             n = int(row[0])
             guid = row[1]
@@ -109,9 +109,9 @@ class FileBasedTranslationMemory:
             if _include_data:
                 data = row[4]
 
-            lst.append(Resource(n, guid, resource_type, language, data))
+            resource_map[resource_type] = Resource(n, guid, resource_type, language, data)
 
-        return lst
+        return resource_map
 
     #CallContext::GetAnnotatedTranslationMemory
     #AnnotatedTmManager::GetAnnotatedTranslationMemory
@@ -627,6 +627,15 @@ class FileBasedTranslationMemory:
         #################
         #SearchResults.post_merge_fixup(fuzzy_results, self.settings)
         for result in fuzzy_results:
+            multiple_translation_penalty = False
+            if len(result.results) > 1:
+                exact_match = 0
+                for rs in result.results:
+                    if rs.scoring_result.match == 100:
+                        exact_match += 1
+                if exact_match > 1:
+                    multiple_translation_penalty = True
+
             for rs in result.results:
                 tag_changed = False
                 for i in range(len(rs.scoring_result.edit_distance.items)):
@@ -636,6 +645,10 @@ class FileBasedTranslationMemory:
                     if isinstance(tok, TagToken) and ed_item.operation != EditOperation.Identity:
                         tag_changed = True
                         break
+                if rs.scoring_result.match == 100 and multiple_translation_penalty:
+                    penalty = settings.find_penalty(PenaltyType.MultipleTranslations)
+                    if penalty is not None:
+                        rs.scoring_result.apply_penalty(penalty)
                 if tag_changed:
                     penalty = settings.find_penalty(PenaltyType.MemoryTagsDeleted)
                     if penalty is not None:

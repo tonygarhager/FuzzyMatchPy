@@ -6,10 +6,19 @@ class PrioritizedToken:
         self.priority = priority
 
 class TokenBundle(Token):
-    def __init__(self, t:Token, priority:int):
+    def __init__(self, t:Token = None, priority:int = 0):
+        if t is None:
+            return
         self.text = t.text
         self.alternatives = [PrioritizedToken(t, priority)]
         self.culture_name = t.culture_name
+
+    @staticmethod
+    def create_from_prioritized_token_list(items):
+        tb = TokenBundle()
+        tb.alternatives = items
+        tb.culture_name = items[0].token.culture_name
+        return tb
 
     def __len__(self):
         return len(self.alternatives)
@@ -79,6 +88,11 @@ class TokenBundle(Token):
             if sim1 < sim2:
                 sim1 = sim2
         return sim1
+
+    def get_token_type(self) -> TokenType:
+        if self.alternatives is None or len(self.alternatives) == 0:
+            raise Exception('InvalidOperationException')
+        return self.alternatives[0].token.type
 
 
 

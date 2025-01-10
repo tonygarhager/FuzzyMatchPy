@@ -208,6 +208,8 @@ class UnicodeBlock(Enum):
 
 class StringUtils:
     base_chars = {}
+    WESTERN_VOWEL_CHARACTERS = ['A', 'E', 'I', 'O', 'U', 'a', 'e', 'i', 'o', 'u']
+    FAR_EAST_VOWEL_CHARACTERS = ['ぁ', 'あ', 'ぃ', 'い', 'ぅ', 'う', 'ぇ', 'え', 'ぉ', 'お', 'ァ', 'ア', 'ィ', 'イ', 'ゥ', 'ウ', 'ェ', 'エ', 'ォ', 'オ']
     whitespace_characters = ['\t',
 			'\n',
 			'\v',
@@ -636,6 +638,19 @@ class StringUtils:
     @staticmethod
     def is_korean_char(c):
         return ('ᄀ' <= c <= 'ᇿ') or ('가' <= c <= '힣')
+    @staticmethod
+    def is_vowel(c):
+        return c != '\0' and (
+                    c in StringUtils.WESTERN_VOWEL_CHARACTERS or c in StringUtils.FAR_EAST_VOWEL_CHARACTERS)
+    @staticmethod
+    def compute_string_hash(s: str) -> int:
+        num = 2166136261
+        if s is not None:
+            for char in s:
+                num = (ord(char) ^ num) * 16777619
+        num = num & 0xffffffff
+        return num
+
 
 if __name__ == "__main__":
     print(StringUtils.is_latin_letter('A'))  # True

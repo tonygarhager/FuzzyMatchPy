@@ -6,10 +6,9 @@ class AnnotatedTranslationMemory:
     def __init__(self, tm_resources: List[LanguageResources], resources_write_count: int, tm):
         self.tm = tm
         self.resources_write_count = resources_write_count
-        self.tm_resources = tm_resources
         self._source_tools: LanguageTools = None
         self._target_tools: LanguageTools = None
-        self.accessor = ResourceStorage()
+        self.accessor = ResourceStorage(tm_resources)
         self._strict_identity_string:str = None
 
     @property

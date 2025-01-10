@@ -1,4 +1,5 @@
 from LanguageResources import LanguageResources
+from Snowball import SnowballWrapper
 from Tokenizer import *
 from Segment import Segment
 from typing import Tuple
@@ -6,7 +7,7 @@ from typing import List
 
 from TokenizerSetup import TokenizerFlags
 from TokenizerHelper import TokenizerHelper
-from IStemmer import IStemmer
+from StemmingRuleSet import IStemmer, RuleBasedStemmer, CachingStemmer
 from TokenizerSetup import TokenizerSetup
 from Hash import Hash
 from TokenizerParameters import TokenizerParameters
@@ -126,7 +127,16 @@ class LanguageTools:
     def stemmer(self) -> IStemmer:
         if self._stemmer is not None:
             return self._stemmer
-        #mod
+        if self._use_alternate_stemmers:
+            rule_based_stemmer = RuleBasedStemmer.create(self._resources, False)
+            t = rule_based_stemmer
+            snowball_wrapper = SnowballWrapper.create(self._resources.culture_name, t)
+
+            if snowball_wrapper is not None:
+                self._stemmer = CachingStemmer(snowball_wrapper)
+                return self._stemmer
+
+        self._stemmer = CachingStemmer(RuleBasedStemmer.create(self._resources, self._use_alternate_stemmers))
         return self._stemmer
 
     @property

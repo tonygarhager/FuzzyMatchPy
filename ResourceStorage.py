@@ -11,12 +11,13 @@ class ResourceStatus:
     NotAvailable = 2
 
 class ResourceStorage:
-    def __init__(self):
+    def __init__(self, resource):
         self.resource_names = None
+        self.db_resource = resource
         reader = ResourceReader('Sdl.LanguagePlatform.NLP.json')
         try:
             reader.open()
-            self.resources = reader.resources
+            self.file_resources = reader.resources
         finally:
             reader.close()
 
@@ -90,7 +91,7 @@ class ResourceStorage:
         return sb
 
     def find(self, full_name):
-        return next((s for s in self.resources.keys() if s.lower() == full_name.lower()), None)
+        return next((s for s in self.file_resources.keys() if s.lower() == full_name.lower()), None)
 
     def get_resource_name(self, culture_name:str, t:LanguageResourceType, fall_back:bool)->str:
         name = self.get_name(culture_name, t)
@@ -117,6 +118,8 @@ class ResourceStorage:
         return text
 
     def get_resource_status(self, culture_name:str, t:LanguageResourceType, fall_back:bool) -> ResourceStatus:
+        if t in self.db_resource:
+            return ResourceStatus.Loaded
         resource_name = self.get_resource_name(culture_name, t, fall_back)
 
         if resource_name is not None:
@@ -124,10 +127,15 @@ class ResourceStorage:
         return ResourceStatus.NotAvailable
 
     def get_resource_data(self, culture_name, t, fall_back):
+
+        if t in self.db_resource:
+            res: Resource = self.db_resource[t]
+            return res.data
+
         resource_name = self.get_resource_name(culture_name, t, fall_back)
 
-        if resource_name is not None and self.resources.get(resource_name) is not None:
-            str = self.resources.get(resource_name)
+        if resource_name is not None and self.file_resources.get(resource_name) is not None:
+            str = self.file_resources.get(resource_name)
             byte_array = base64.b64decode(str)
             return byte_array
         return None

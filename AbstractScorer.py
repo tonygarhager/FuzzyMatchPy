@@ -98,7 +98,7 @@ class AbstractScorer(ABC):
             if token.is_whitespace or token.is_punctuation:
                 num += 0.1
             elif isinstance(token, TagToken) == False:
-                num + 1.0
+                num += 1.0
             if token.is_word:
                 total_words += 1
                 if AbstractScorer.is_stopword(token):
@@ -164,7 +164,7 @@ class AbstractScorer(ABC):
 
             penalty = None
             if plc.type != PlaceableType.PairedTagEnd:
-                penalty = search_result.settings.find_penalty(PenaltyType.TagMismatch)
+                penalty = self.settings.find_penalty(PenaltyType.TagMismatch)
 
             if penalty:
                 result.apply_penalty(penalty)

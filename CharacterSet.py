@@ -13,6 +13,9 @@ class CharacterSet:
         self._categories = set()
         self._ranges = []
 
+    def __iter__(self):
+        return self._individual_members.__iter__()
+
     def contains(self, c):
         if c in self._individual_members:
             return not self.negated

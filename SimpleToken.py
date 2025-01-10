@@ -6,7 +6,7 @@ class SimpleToken(Token):
         self.text = text
         self._type = t
         self.is_stopword = False
-        self.stem = ''
+        self.stem = None
 
     @property
     def is_placeable(self):

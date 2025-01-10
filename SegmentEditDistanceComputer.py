@@ -4,6 +4,9 @@ from BuiltinRecognizers import BuiltinRecognizers
 from EditDistance import EditDistance, EditOperation, EditDistanceItem, EditDistanceResolution
 from SimilarityComputers import MatrixItem, SimilarityComputers
 from SimilarityMatrix import SimilarityMatrix
+from Tag import TagType
+from TagAligner import TagAligner
+from TagToken import TagToken
 
 
 class SegmentEditDistanceComputer:
@@ -132,15 +135,90 @@ class SegmentEditDistanceComputer:
 
         return num
 
+    @staticmethod
+    def patch_similarity_matrix(sim, src_tokens, trg_tokens, tag_alignment):
+        """
+        Patches the similarity matrix based on tag alignment.
+
+        :param sim: SimilarityMatrix instance.
+        :param src_tokens: List of source tokens.
+        :param trg_tokens: List of target tokens.
+        :param tag_alignment: TagAssociations instance for tag alignment.
+        """
+        if tag_alignment is not None and len(tag_alignment) != 0:
+            for s, src_token in enumerate(src_tokens):
+                if isinstance(src_token, TagToken):
+                    tag = src_token.tag
+                    if tag.type in (TagType.Start, TagType.End):
+                        for t, trg_token in enumerate(trg_tokens):
+                            flag = sim.is_assigned(s, t)
+                            flag2 = flag
+                            if flag2:
+                                num = sim.get_element_at(s, t)
+                                flag2 = num < 0.0
+                            if not flag2 and isinstance(trg_token, TagToken):
+                                tag2 = trg_token.tag
+                                if tag2.type in (TagType.Start, TagType.End) and not tag_alignment.are_associated(s, t):
+                                    sim.set_element_at(s, t, -1.0)
+
+    @staticmethod
+    def compute_edit_distance_matrix_full(matrix, sim, aligned_tags):
+        """
+        Computes the full edit distance matrix based on the similarity matrix and aligned tags.
+
+        :param matrix: 2D list of MatrixItem objects representing the edit distance matrix.
+        :param sim: SimilarityMatrix instance.
+        :param aligned_tags: TagAssociations instance for aligned tags.
+        """
+        for i in range(1, len(sim.source_tokens) + 1):
+            for j in range(1, len(sim.target_tokens) + 1):
+                num = sim.get_element_at(i - 1, j - 1)
+                num2 = num
+                num3 = 100000.0 if num2 < 0.0 else (matrix[i - 1][j - 1].score + (1.0 - num2))
+                num4 = matrix[i][j - 1].score + 1.0
+                num5 = matrix[i - 1][j].score + 1.0
+                num6 = min(num3, num5, num4)
+
+                edit_operation = EditOperation.Undefined
+                if num6 == num5:
+                    edit_operation = EditOperation.Delete
+                elif num6 == num4:
+                    edit_operation = EditOperation.Insert
+                elif num6 == num3:
+                    edit_operation = EditOperation.Identity if num2 == 1.0 else EditOperation.Change
+
+                if aligned_tags is not None and len(aligned_tags) > 0:
+                    operation_by_source_position = aligned_tags.get_operation_by_source_position(i - 1)
+                    operation_by_target_position = aligned_tags.get_operation_by_target_position(j - 1)
+                    if (operation_by_source_position in {EditOperation.Insert,
+                                                         EditOperation.Delete}) and edit_operation != operation_by_source_position:
+                        edit_operation = operation_by_source_position
+                    elif (operation_by_target_position in {EditOperation.Insert,
+                                                           EditOperation.Delete}) and edit_operation != operation_by_target_position:
+                        edit_operation = operation_by_target_position
+
+                matrix[i][j].similarity = num2
+                matrix[i][j].operation = edit_operation
+
+                if edit_operation != EditOperation.Insert:
+                    matrix[i][j].score = num5 if edit_operation == EditOperation.Delete else num3
+                else:
+                    matrix[i][j].score = num4
+
     def compute_edit_distance_impl_original(self, source_tokens, target_tokens, disabled_auto_substitutions:BuiltinRecognizers, diagonal_only:bool):
         if diagonal_only and len(target_tokens) != len(source_tokens):
             raise Exception("diagonal_only and target_tokens must have same length")
-        aligned_tags = None
         result = EditDistance(len(source_tokens), len(target_tokens), 0.0)
         sim = SimilarityMatrix(source_tokens, target_tokens, False, disabled_auto_substitutions, self._characters_normalize_safely, self._apply_small_change_adjustment)
         matrix = SegmentEditDistanceComputer.create_edit_distance_matrix(source_tokens, target_tokens)
 
-        if diagonal_only:
+        aligned_tags = TagAligner.align_paired_tags(source_tokens, target_tokens, sim)
+
+        if aligned_tags is not None and len(aligned_tags) > 0:
+            SegmentEditDistanceComputer.patch_similarity_matrix(sim, source_tokens, target_tokens, aligned_tags)
+            SegmentEditDistanceComputer.compute_edit_distance_matrix_full(matrix, sim, aligned_tags)
+
+        elif diagonal_only:
             for k in range(len(source_tokens) + 1):
                 matrix[k, k].operation = EditOperation.Change
                 matrix[k, k].similarity = 0.0
@@ -182,6 +260,9 @@ class SegmentEditDistanceComputer:
             item.target = j
             result.add_at_start(item)
 
+        if aligned_tags is not None and len(aligned_tags) > 0:
+            self.fix_tag_actions(source_tokens, target_tokens, result, aligned_tags)
+
         if self._compute_moves:
             num = self.detect_moves(result, matrix)
             if num > 0:
@@ -189,3 +270,14 @@ class SegmentEditDistanceComputer:
                 result.distance += num * 1.1
         return result, aligned_tags
 
+    @staticmethod
+    def fix_tag_actions(source_tokens, target_tokens, result, tag_alignment):
+        """
+        Placeholder function for fixing tag actions in an edit distance result based on tag alignment.
+
+        :param source_tokens: List of source tokens.
+        :param target_tokens: List of target tokens.
+        :param result: EditDistance instance representing the edit distance result.
+        :param tag_alignment: TagAssociations instance for tag alignment.
+        """
+        pass

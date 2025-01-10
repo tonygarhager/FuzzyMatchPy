@@ -70,7 +70,7 @@ class TokenizerParameters:
             except Exception as e:
                 pass
         if (setup.builtin_recognizers & BuiltinRecognizers.RecognizeMeasurements) != BuiltinRecognizers.RecognizeNone:
-            self.add_recognizer(MeasureFSTRecognizer.create(settings, access, culture_name, 95))
+            self.add_recognizer(MeasureFSTRecognizer.load(settings, culture_name, 95, access.accessor))
             self.add_recognizer(TokenizerParameters.create_currency_recognizer(settings, access, culture_name))
 
         separate_clitics = setup.separate_clitics and CultureInfoExtensions.use_clitics(culture_name)

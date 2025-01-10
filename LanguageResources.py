@@ -1,5 +1,6 @@
 from ResourceStorage import *
 from Resource import *
+from StemmingRuleSetReader import StemmingRuleSetReader
 from Wordlist import Wordlist
 from StemmingRuleSet import *
 
@@ -62,5 +63,18 @@ class LanguageResources:
 
     @property
     def stemming_rules(self):
-        return self._stemming_rules#mod
+        if self._stemming_rules is not None:
+            stemming_rule_set = self._stemming_rules
+        else:
+            #self.get_statuses()
+            if self._stemming_rules_status == ResourceStatus.NotAvailable:
+                stemming_rule_set = None
+            else:
+                with self.accessor.read_resource_data(self.culture_name, LanguageResourceType.StemmingRules,True) as stream:
+                    self._stemming_rules = StemmingRuleSetReader(stream).read(self.culture_name)
+                    if self._stemming_rules is not None:
+                        self._stemming_rules_status = ResourceStatus.Loaded
+                stemming_rule_set = self._stemming_rules
+
+        return stemming_rule_set
 

@@ -26,6 +26,7 @@ class FileBasedTMHelper:
         settings.is_document_search = True
         settings.add_penalty(PenaltyType.MemoryTagsDeleted, 5)
         settings.add_penalty(PenaltyType.Alignment, 1)
+        settings.add_penalty(PenaltyType.MultipleTranslations, 1)
         return settings
 
     @staticmethod
@@ -39,14 +40,14 @@ class FileBasedTMHelper:
             elif child.name == 'x':
                 id = str(int(child.attrs['id']) - 1 + FileBasedTMHelper.last_id)
                 last_id = int(id)
-                segment.add(Tag(TagType.Standalone, id, anchor))
+                segment.add(Tag(TagType.Standalone, id, anchor, anchor))
                 anchor += 1
             elif child.name == 'g':
                 id = str(int(child.attrs['id']) - 1 + FileBasedTMHelper.last_id)
                 last_id = int(id)
-                segment.add(Tag(TagType.Start, id, anchor))
+                segment.add(Tag(TagType.Start, id, anchor, anchor))
                 segment.add_text(child.text)
-                segment.add(Tag(TagType.End, id, anchor))
+                segment.add(Tag(TagType.End, id, anchor, anchor))
                 anchor += 1
         FileBasedTMHelper.last_id = last_id + 1
         return segment
@@ -87,8 +88,10 @@ class FileBasedTMHelper:
         ccc = 0
         for tu in tus:
             ccc += 1
-            if ccc < 5:
+            if ccc < 11:
                 continue
+            print(ccc)
+            print(str(tu.src_segment))
             anno_tu = AnnotatedTranslationUnit(anno_tm, tu, False, True)
             settings = FileBasedTMHelper.get_search_setting_full(5, 70)
             tu_indexes_to_fuzzy_search = [0]

@@ -154,7 +154,7 @@ class NumberFSTRecognizer(Recognizer):
         self.evaluate_and_sort_candidates(prioritized_tokens)
 
         if allow_token_bundles and len(prioritized_tokens) > 1:
-            return TokenBundle(prioritized_tokens), num
+            return TokenBundle.create_from_prioritized_token_list(prioritized_tokens), num
 
         return prioritized_tokens[0].token, num
 
@@ -254,5 +254,5 @@ class NumberFSTRecognizer(Recognizer):
         return NumberToken(surface, numeric_separator, numeric_separator2, c, c2, sign,
                            ''.join(string_builder) if string_builder else None,
                            ''.join(string_builder2) if string_builder2 else None,
-                           ''.join(string_builder3) if string_builder3 else None, culture=culture)
+                           ''.join(string_builder3) if string_builder3 else None)
 

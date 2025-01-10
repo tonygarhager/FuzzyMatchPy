@@ -44,8 +44,8 @@ class SequenceAlignmentComputer:
     class Cell:
         def __init__(self):
             self.score = 0
-            self.back_i = -1
-            self.back_j = -1
+            self.back_i = 0
+            self.back_j = 0
             self.op = None
             self.ul_max_score = 0
 
@@ -192,18 +192,21 @@ class SequenceAlignmentComputer:
         if may_skip and (self._source_skip_scores is None or self._target_skip_scores is None):
             self.compute_skip_score_caches()
 
+        flag = self._max_items != 1
+
         if self._table is None:
             self._table = [[SequenceAlignmentComputer.Cell() for _ in range(len(self._target) + 1)] for _ in range(len(self._source) + 1)]
-            self.compute_full_table(may_skip)
+            if flag == False:
+                self.compute_full_table(may_skip)
 
         array = None
-        if self._max_items != 1:
+        if flag:
             array = [[False] * (len(self._target) + 1) for _ in range(len(self._source) + 1)]
 
         first = True
         while first or (len(list2) > 0 and (self._max_items == 0 or len(list_) < self._max_items)):
             first = False
-            if self._max_items != 1:
+            if flag:
                 score = self.compute_maxima_for_coverage(list2, upto_source, upto_target, may_skip, array)
             else:
                 score = self.compute_maxima_for_lcs(list2, upto_source, upto_target)

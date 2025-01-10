@@ -166,3 +166,19 @@ class Segment:
                 ranges.append(SegmentPosition(i, j))
 
         return sb, ranges
+
+    def remove_token_bundles(self):
+        flag = False
+        if self.tokens is None:
+            return False
+
+        for i in range(len(self.tokens)):
+            token_bundle = self.tokens[i] if isinstance(self.tokens[i], TokenBundle) else None
+            if token_bundle:
+                if len(token_bundle) == 0:
+                    raise Exception('InvalidOperationException')
+                self.tokens[i] = token_bundle.get_best()
+                self.tokens[i].span = token_bundle.span
+                flag = True
+
+        return flag
