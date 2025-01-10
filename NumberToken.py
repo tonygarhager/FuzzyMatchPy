@@ -44,6 +44,7 @@ class NumberToken(Token, ILocalizableToken):
         self._canonical_number = sb
         try:
             self.value:float = float(self._canonical_number)
+            self._value_valid = True
         except ValueError:
             self.value:float = 0.0
             self._value_valid = False
@@ -105,6 +106,28 @@ class NumberToken(Token, ILocalizableToken):
     @raw_decimal_digits.setter
     def raw_decimal_digits(self, raw_decimal_digits:str):
         self._raw_decimal_digits = raw_decimal_digits
+    @property
+    def is_placeable(self):
+        return True
+    @property
+    def is_substitutable(self):
+        return True
+    def get_similarity(self, other):
+        bundle_similarity = super().get_bundle_similarity(other)
+        if other is None or not isinstance(other, self.__class__):
+            return bundle_similarity
+
+        if not isinstance(other, NumberToken):
+            return SegmentElement.Similarity.Non
+
+        if self._value_valid:
+            if abs(self.value - other.value) >= 0.01:
+                return SegmentElement.Similarity.IdenticalType
+            return SegmentElement.Similarity.IdenticalValueAndType
+        else:
+            if self._canonical_number != other._canonical_number:
+                return SegmentElement.Similarity.IdenticalType
+            return SegmentElement.Similarity.IdenticalValueAndType
 
 class MeasureToken(NumberToken):
     def __init__(self, text:str, numeric_part:NumberToken, unit:Unit, unit_string:str, unit_separator:str, custom_category:str = None):
@@ -118,3 +141,7 @@ class MeasureToken(NumberToken):
 
     def get_token_type(self) -> TokenType:
         return TokenType.Measurement
+
+    @property
+    def is_placeable(self):
+        return True
