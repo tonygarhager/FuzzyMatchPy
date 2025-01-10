@@ -1,6 +1,5 @@
 from Label import Label
-from Match import FSTMatch
-from Matcher import Matcher
+from Matcher import Matcher, FSTMatch
 
 class FSTRecognizer:
     def __init__(self, fst, culture):

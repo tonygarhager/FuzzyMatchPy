@@ -1,7 +1,4 @@
 import argparse
-from translate.storage import tmx
-from translate.storage.base import TranslationStore
-from fuzzy_searcher import FuzzySearcher
 from FileBasedTMHelper import FileBasedTMHelper
 import json
 import sqlite3
@@ -83,8 +80,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo script for default arguments.")
     parser.add_argument("--tmpath", type=str, default="test/test.sdltm", help="First argument")
-    parser.add_argument("--query", type=str, default="40% women in leadership", help="Second argument")
-    parser.add_argument("--query_file", type=str, default=None, help="Second argument")
+    parser.add_argument("--query", type=str, default=None, help="Second argument")
+    parser.add_argument("--query_file", type=str, default='E:\\test.xliff', help="Second argument")
     parser.add_argument("--maxResults", type=int, default=5, help="Second argument")
     parser.add_argument("--minScore", type=int, default=70, help="Second argument")
     args = parser.parse_args()

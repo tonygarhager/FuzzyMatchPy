@@ -1,5 +1,6 @@
 from typing import Tuple, Optional
 from Label import Label
+from Matcher import Matcher
 
 
 class FSTTransition:

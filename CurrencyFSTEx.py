@@ -15,38 +15,6 @@ class CurrencyFSTEx:
         self.currency_formats: List[CurrencyFormat] = []
 
     @staticmethod
-    def get_defaults(culture, accessor, culture_metadata_manager):
-        if accessor is None:
-            accessor = ResourceFileResourceAccessor(culture_metadata_manager)
-
-        wl = Wordlist()
-        stream = accessor.read_resource_data(culture, "CurrencySymbols", True)
-        with stream:
-            if stream:
-                wl.load(stream, True)
-
-        currency_fst_ex = None
-        if not wl.count:
-            currency_fst_ex = CurrencyFSTEx()
-        else:
-            fst_ex = CurrencyFSTEx()
-            culture_info = culture_metadata_manager.get_language(culture).get_culture_info()
-
-            for text in wl.items:
-                currency_format = CurrencyFormat()
-                currency_format.symbol = text
-                currency_format.currency_symbol_positions = [CurrencySymbolPosition.beforeAmount, CurrencySymbolPosition.afterAmount]
-
-                if not culture_info.currency_precedes_number():
-                    currency_format.currency_symbol_positions.reverse()
-
-                fst_ex.currency_formats.append(currency_format)
-
-            currency_fst_ex = fst_ex
-
-        return currency_fst_ex
-
-    @staticmethod
     def from_binary(data: bytes) -> 'CurrencyFSTEx':
         data_str = data.decode('utf-8')
         lines = [line for line in data_str.split('\r') if line.strip()]

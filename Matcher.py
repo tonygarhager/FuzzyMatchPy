@@ -1,14 +1,22 @@
 from typing import Callable, List, Optional
-
 from MatchState import MatchState
-from FST import FST
+from dataclasses import dataclass
+
+@dataclass
+class Match:
+    index: int
+    length: int
+
+@dataclass
+class FSTMatch(Match):
+    output: str
 
 class Matcher:
     class MatchMode:
         ANALYSE = "Analyse"
         GENERATE = "Generate"
 
-    def __init__(self, fst: FST):
+    def __init__(self, fst:'FST'):
         self._fst = fst
 
     def match(

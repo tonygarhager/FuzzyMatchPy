@@ -55,7 +55,7 @@ class FileBasedTMHelper:
     def get_translation_units_from_xliff(fn:str) -> List[TranslationUnit]:
         with open(fn, 'r', encoding='utf-8') as file:
             xml = file.read()
-        soup = BS(xml,features="lxml")
+        soup = BS(xml,features="xml")
         lst = []
         for file in soup.find_all('file'):
             src_lang = file.attrs['source-language']

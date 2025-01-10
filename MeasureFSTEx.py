@@ -1,5 +1,4 @@
 from typing import Dict, Optional
-
 from CustomUnitDefinition import CustomUnitDefinition, Unit
 
 
