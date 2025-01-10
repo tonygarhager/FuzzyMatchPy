@@ -41,7 +41,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
     def segment(self) -> Segment:
         return self._segment
 
-    @property
+    #@property
     def tm_feature_vector(self) -> List[int]:
         if self._tm_feature_vector is not None:
             return self._tm_feature_vector
@@ -122,6 +122,7 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
     @staticmethod
     def get_strict_hash(s):
         bytes_data = s.encode('utf-16le')  # Encoding.Unicode in C# corresponds to UTF-16 LE
+        print(bytes_data.hex())
         num = AbstractAnnotatedSegment.fnv1a_32_hash(bytes_data, 0, len(bytes_data))
         num2 = int(AbstractAnnotatedSegment.jenkins_hash(bytes_data))
         num2 = num2 & 0xFFFFFFFFFFFF0000  # Apply the mask 18446744073709486080UL
@@ -197,6 +198,8 @@ class AbstractAnnotatedSegment(IAnnotatedSegment):
             elif token.type == TokenType.Tag:
                 text = "\\" + chr(0xF164)
 
+            ddd = text.encode('utf-16le')
+            print(ddd.hex())
             if text is not None:
                 result.append(text)
 

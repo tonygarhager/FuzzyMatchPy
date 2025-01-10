@@ -102,10 +102,13 @@ class SegmentEditDistanceComputer:
 
     def detect_moves(self, result, matrix):
         num = 0
-        for i in range(len(result.items)):
+        i = 0
+        while i < len(result.items):
+            print(i)
             operation = result.items[i].operation
             if operation == EditOperation.Delete or operation == EditOperation.Insert:
                 num2 = num3 = num4 = num5 = 0
+                nj = -1
                 for j in range(i + 1, len(result.items)):
                     if operation == EditOperation.Delete and result.items[j].operation == EditOperation.Insert:
                         if matrix[result.items[i].source + 1][result.items[j].target + 1].similarity >= 0.95:
@@ -113,6 +116,7 @@ class SegmentEditDistanceComputer:
                             num4 = result.items[i].target
                             num3 = result.items[j].target
                             num5 = result.items[j].source
+                            nj = j
                             break
                     elif operation == EditOperation.Insert and result.items[j].operation == EditOperation.Delete:
                         if matrix[result.items[j].source + 1][result.items[i].target + 1].similarity >= 0.95:
@@ -120,9 +124,10 @@ class SegmentEditDistanceComputer:
                             num4 = result.items[j].target
                             num3 = result.items[i].target
                             num5 = result.items[i].source
+                            nj = j
                             break
 
-                if j < len(result.items):
+                if nj != -1 and nj < len(result.items):
                     edit_distance_item = result.items[i]
                     edit_distance_item.operation = EditOperation.Move
                     edit_distance_item.source = num2
@@ -130,9 +135,9 @@ class SegmentEditDistanceComputer:
                     edit_distance_item.move_source_target = num4
                     edit_distance_item.move_target_source = num5
                     result.items[i] = edit_distance_item
-                    result.items.pop(j)
+                    result.items.pop(nj)
                     num += 1
-
+            i += 1
         return num
 
     @staticmethod

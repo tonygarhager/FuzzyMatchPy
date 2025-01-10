@@ -257,7 +257,7 @@ class Tokenizer:
         if enhanced_asian:
             num = 0
             for token in acronym_tokens:
-                if len(token.Text) > 6 and isinstance(token, SimpleToken):
+                if len(token.text) > 6 and isinstance(token, SimpleToken):
                     token.Type = TokenType.Word
                 else:
                     num += 1
@@ -285,7 +285,7 @@ class Tokenizer:
                 return
 
         for token in tokens:
-            if token.type == TokenType.Acronym and isinstance(token, SimpleToken) and '&' not in token.Text:
+            if token.type == TokenType.Acronym and isinstance(token, SimpleToken) and '&' not in token.text:
                 token.type = TokenType.Word
 
     def tokenize_internal(self, s:str, current_run:int, create_whitespace_tokens:bool, allow_token_bundles:bool, recognizers:[]):

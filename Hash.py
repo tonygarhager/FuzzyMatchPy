@@ -11,7 +11,7 @@ class Hash:
     def get_hashcode_int(s:str) -> int:
         num = 0
         for c in s:
-            num = (31 * num + ord(c))  # ord(c) gives the Unicode code point of the character
+            num = Hash.to_32bit(31 * num + ord(c))  # ord(c) gives the Unicode code point of the character
         num = Hash.to_32bit(num)
         return num
 

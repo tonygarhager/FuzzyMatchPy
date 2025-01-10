@@ -617,7 +617,7 @@ class FileBasedTranslationMemory:
                 while i < len(tus) and i < index + batch_size:
                     if i in tu_indexes_to_fuzzy_search:
                         num = i
-                        list = tus[i].source.tm_feature_vector
+                        list = tus[i].source.tm_feature_vector()
                         batch_features[num] = list
                     i += 1
 
@@ -1199,7 +1199,7 @@ class FileBasedTranslationMemory:
             raise Exception('ErrorCode.TMSearchModeNotSupported')
 
         list2 = []
-        list = segment.tm_feature_vector
+        list = segment.tm_feature_vector()
         if (self.tm.fuzzy_indexes & fuzzy_indexes2) != 0:
             if list and len(list) > 0:
                 while True:
