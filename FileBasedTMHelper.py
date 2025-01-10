@@ -105,7 +105,7 @@ class FileBasedTMHelper:
                 one_line.append(' ')
             out_data.append(one_line)
 
-        with open('output.csv', mode='w', newline='', encoding="utf-8") as file:
+        with open('output.csv', mode='w', newline='', encoding="utf-8-sig") as file:
             writer = csv.writer(file)
 
             # Write the rows to the CSV file
