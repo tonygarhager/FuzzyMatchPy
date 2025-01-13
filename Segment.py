@@ -30,8 +30,9 @@ class Segment:
 
     def add_text(self, txt:str):
         if len(self.elements) > 0 and isinstance(self.last_element(), Text):
-            text = Text(self.last_element())
-            text.value += txt
+            text = self.last_element()
+            ss = str(txt)
+            text.value += ss
             return
         self.elements.append(Text(txt))
 
